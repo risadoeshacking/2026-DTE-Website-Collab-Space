@@ -1,11 +1,262 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
-</head>
-<body>
-    
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register | CollabSpace</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="icon" href="{{ url_for('static', filename='collab.png') }}" />
+  </head>
+  <body>
+    <div class="auth-container">
+
+      <div class="logo-section">
+        <img
+          src="{{ url_for('static', filename='collab.png') }}"
+          alt="CollabSpace Logo"
+          class="logo"
+        />
+        <h1>CollabSpace</h1>
+        <p>Connect. Collaborate. Create.</p>
+      </div>
+
+
+      <div class="auth-card">
+        <h2>Create Account</h2>
+        <p class="subtitle">Join CollabSpace and start collaborating</p>
+
+
+        <div id="message" class="flash-messages" style="display: none"></div>
+
+
+        <form id="registerForm">
+
+          <div class="form-group">
+            <label for="full_name">Full Name</label>
+            <div class="input-wrapper">
+              <input
+                type="text"
+                id="full_name"
+                name="full_name"
+                placeholder="Enter your full name"
+                required
+              />
+              <i class="fas fa-user"></i>
+            </div>
+          </div>
+
+
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <div class="input-wrapper">
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="Enter your email"
+                required
+              />
+              <i class="fas fa-envelope"></i>
+            </div>
+          </div>
+
+
+          <div class="form-group">
+            <label for="year_level">Year Level</label>
+            <div class="input-wrapper">
+              <select id="year_level" name="year_level" required>
+                <option value="" disabled selected>
+                  Select your year level
+                </option>
+                <option value="9">Year 9</option>
+                <option value="10">Year 10</option>
+                <option value="11">Year 11</option>
+                <option value="12">Year 12</option>
+                <option value="13">Year 13</option>
+              </select>
+              <i class="fas fa-graduation-cap"></i>
+            </div>
+          </div>
+
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="input-wrapper">
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Create a password"
+                required
+                minlength="6"
+              />
+              <i class="fas fa-lock"></i>
+              <button
+                type="button"
+                class="password-toggle"
+                onclick="togglePassword('password', 'toggleIcon')"
+              >
+                <i class="fas fa-eye" id="toggleIcon"></i>
+              </button>
+            </div>
+
+            <div class="password-strength">
+              <div class="strength-bar">
+                <div class="strength-fill" id="strengthFill"></div>
+              </div>
+              <span class="strength-text" id="strengthText"
+                >Password strength</span
+              >
+            </div>
+          </div>
+
+
+          <div class="form-group">
+            <label for="confirm_password">Confirm Password</label>
+            <div class="input-wrapper">
+              <input
+                type="password"
+                id="confirm_password"
+                name="confirm_password"
+                placeholder="Confirm your password"
+                required
+              />
+              <i class="fas fa-lock"></i>
+              <button
+                type="button"
+                class="password-toggle"
+                onclick="togglePassword('confirm_password', 'toggleIconConfirm')"
+              >
+                <i class="fas fa-eye" id="toggleIconConfirm"></i>
+              </button>
+            </div>
+          </div>
+
+
+          <button type="submit" class="btn-primary" id="registerBtn">
+            Create Account
+          </button>
+        </form>
+
+
+        <div class="auth-switch">
+          Already have an account? <a href="{{ url_for('login') }}">Sign in</a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+
+      function togglePassword(inputId, iconId) {
+        const passwordInput = document.getElementById(inputId);
+        const toggleIcon = document.getElementById(iconId);
+
+        if (passwordInput.type === "password") {
+          passwordInput.type = "text";
+          toggleIcon.classList.remove("fa-eye");
+          toggleIcon.classList.add("fa-eye-slash");
+        } else {
+          passwordInput.type = "password";
+          toggleIcon.classList.remove("fa-eye-slash");
+          toggleIcon.classList.add("fa-eye");
+        }
+      }
+
+      const passwordInput = document.getElementById("password");
+      const strengthFill = document.getElementById("strengthFill");
+      const strengthText = document.getElementById("strengthText");
+
+      passwordInput.addEventListener("input", function () {
+        const password = this.value;
+        let strength = 0;
+
+        if (password.length >= 6) strength++;
+        if (password.length >= 8) strength++;
+        if (/[A-Z]/.test(password)) strength++;
+        if (/[0-9]/.test(password)) strength++;
+        if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+        strengthFill.className = "strength-fill";
+
+        if (password.length === 0) {
+          strengthFill.style.width = "0";
+          strengthText.textContent = "Password strength";
+        } else if (strength <= 2) {
+          strengthFill.classList.add("weak");
+          strengthText.textContent = "Weak password";
+        } else if (strength <= 3) {
+          strengthFill.classList.add("medium");
+          strengthText.textContent = "Medium password";
+        } else {
+          strengthFill.classList.add("strong");
+          strengthText.textContent = "Strong password";
+        }
+      });
+
+      document
+        .getElementById("registerForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const full_name = document.getElementById("full_name").value;
+          const email = document.getElementById("email").value;
+          const year_level = document.getElementById("year_level").value;
+          const password = document.getElementById("password").value;
+          const confirm_password =
+            document.getElementById("confirm_password").value;
+          const messageDiv = document.getElementById("message");
+          const registerBtn = document.getElementById("registerBtn");
+
+          if (password !== confirm_password) {
+            messageDiv.innerHTML =
+              '<div class="flash-message error">Passwords do not match!</div>';
+            messageDiv.style.display = "block";
+            return;
+          }
+
+          registerBtn.classList.add("loading");
+          registerBtn.disabled = true;
+
+          setTimeout(() => {
+            const users = JSON.parse(
+              localStorage.getItem("collabspace_users") || "[]"
+            );
+
+            if (users.find((u) => u.email === email)) {
+              messageDiv.innerHTML =
+                '<div class="flash-message error">An account with this email already exists.</div>';
+              messageDiv.style.display = "block";
+              registerBtn.classList.remove("loading");
+              registerBtn.disabled = false;
+              return;
+            }
+
+            const newUser = { full_name, email, password, year_level };
+            users.push(newUser);
+            localStorage.setItem("collabspace_users", JSON.stringify(users));
+
+            messageDiv.innerHTML =
+              '<div class="flash-message success">Account created successfully! Redirecting to login...</div>';
+            messageDiv.style.display = "block";
+
+            setTimeout(() => {
+              window.location.href = '{{ url_for("login") }}';
+            }, 1500);
+          }, 1000);
+        });
+
+      document.querySelectorAll("input, select").forEach((input) => {
+        input.addEventListener("input", () => {
+          document.getElementById("message").style.display = "none";
+        });
+      });
+    </script>
+  </body>
 </html>
