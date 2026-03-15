@@ -4,7 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login | Collab Space</title>
-    <link rel="stylesheet" href="..//static/styles.css" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
   </head>
 
   <body>
@@ -15,7 +18,11 @@
           <p>Enter your credentials to access your account</p>
         </div>
 
-        <form class="login-form" method="POST" action="{{ url_for('login') }}">
+        <form
+          class="login-form"
+          method="POST"
+          action="{{ url_for('login_page') }}"
+        >
           <div class="form-group">
             <div class="input-wrapper">
               <input type="email" name="email" required />
@@ -36,7 +43,7 @@
         <div class="signup-link">
           <p>
             Don't have an account?
-            <a href="../templates/register.html">Create one</a>
+            <a href="{{ url_for('register_page') }}">Create one</a>
           </p>
         </div>
       </div>

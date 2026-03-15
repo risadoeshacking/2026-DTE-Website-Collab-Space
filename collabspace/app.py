@@ -1,6 +1,6 @@
 import sqlite3
 from pathlib import Path
-from flask import Flask
+from flask import Flask, request, render_template, redirect, url_for
 
 app = Flask(__name__)
 
@@ -22,17 +22,49 @@ def init_db():
     conn.close()
 
 @app.route("/")
-def feed():
+def home():
     init_db()
-    conn = db()
-    rows = conn.execute().fetchall()
-    conn.close()
+    return redirect(url_for("login_page"))
 
-    if not rows:
-        return "working"
-    return "Nice \n\n" + "\n".join(
-        [f"- [{r['post_type']}] {r['title']} (by {r['full_name']})" for r in rows]
-    )
+@app.route("/login", methods=["GET", "POST"])
+def login_page():
+    if request.method == "POST":
+        email = request.form["email"]
+        password = request.form["password"]
+
+        conn = db()
+        user = conn.execute(
+            "SELECT * FROM users WHERE email=? AND password_hash=?",
+            (email, password)
+        ).fetchone()
+        conn.close()
+
+        if user:
+            return "Login successful"
+        else:
+            return "Wrong email or password"
+
+    return render_template("login.html")
+
+@app.route("/register", methods=["GET", "POST"])
+def register_page():
+    if request.method == "POST":
+        fullname = request.form["fullname"]
+        email = request.form["email"]
+        password = request.form["password"]
+
+        conn = db()
+        conn.execute(
+            "INSERT INTO users (full_name, email, password_hash) VALUES (?, ?, ?)",
+            (fullname, email, password)
+        )
+        conn.commit()
+        conn.close()
+
+        return redirect(url_for("login_page"))
+
+    return render_template("register.html")
 
 if __name__ == "__main__":
+    init_db()
     app.run(debug=True)
