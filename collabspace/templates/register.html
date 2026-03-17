@@ -2,7 +2,6 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Create Account | Collab Space</title>
     <link
       rel="stylesheet"
@@ -11,48 +10,45 @@
   </head>
 
   <body>
-    <div class="login-container">
-      <div class="login-card">
-        <div class="login-header">
+    <div class="split-container">
+      <div class="left-side">
+        <div class="glass-card">
+          <img
+            src="{{ url_for('static', filename='logo.png') }}"
+            class="logo"
+          />
+
           <h2>Create Account</h2>
-          <p>Join Collab Space and start collaborating</p>
-        </div>
+          <p class="sub">Start your journey</p>
 
-        <form
-          class="login-form"
-          method="POST"
-          action="{{ url_for('register_page') }}"
-        >
-          <div class="form-group">
-            <div class="input-wrapper">
-              <input type="text" name="fullname" required />
-              <label>Full Name</label>
-            </div>
-          </div>
+          <form method="POST" action="{{ url_for('register_page') }}">
+            <input
+              type="text"
+              name="fullname"
+              placeholder="Full Name"
+              required
+            />
+            <input type="email" name="email" placeholder="Email" required />
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              required
+            />
 
-          <div class="form-group">
-            <div class="input-wrapper">
-              <input type="email" name="email" required />
-              <label>Email Address</label>
-            </div>
-          </div>
+            <button type="submit">Create</button>
+          </form>
 
-          <div class="form-group">
-            <div class="input-wrapper">
-              <input type="password" name="password" required />
-              <label>Password</label>
-            </div>
-          </div>
-
-          <button type="submit" class="login-btn">Create Account</button>
-        </form>
-
-        <div class="signup-link">
-          <p>
-            Already have an account?
-            <a href="{{ url_for('login_page') }}">Sign In</a>
+          <p class="link-text">
+            Already have one?
+            <a href="{{ url_for('login_page') }}">Login</a>
           </p>
         </div>
+      </div>
+
+      <div class="right-side big-text">
+        <h1>Join Collab Space</h1>
+        <p>Create. Share. Collaborate.</p>
       </div>
     </div>
   </body>

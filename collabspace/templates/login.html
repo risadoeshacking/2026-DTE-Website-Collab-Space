@@ -2,7 +2,6 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login | Collab Space</title>
     <link
       rel="stylesheet"
@@ -11,38 +10,38 @@
   </head>
 
   <body>
-    <div class="login-container">
-      <div class="login-card">
-        <div class="login-header">
+    <div class="split-container">
+
+      <div class="left-side">
+        <h1>Collab Space</h1>
+        <p>Work together. Build together.</p>
+      </div>
+
+
+      <div class="right-side">
+        <div class="glass-card">
+          <img
+            src="{{ url_for('static', filename='logo.png') }}"
+            class="logo"
+          />
+
           <h2>Login</h2>
-          <p>Enter your credentials to access your account</p>
-        </div>
+          <p class="sub">Enter your details</p>
 
-        <form
-          class="login-form"
-          method="POST"
-          action="{{ url_for('login_page') }}"
-        >
-          <div class="form-group">
-            <div class="input-wrapper">
-              <input type="email" name="email" required />
-              <label>Email Address</label>
-            </div>
-          </div>
+          <form method="POST" action="{{ url_for('login_page') }}">
+            <input type="email" name="email" placeholder="Email" required />
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              required
+            />
 
-          <div class="form-group">
-            <div class="input-wrapper">
-              <input type="password" name="password" required />
-              <label>Password</label>
-            </div>
-          </div>
+            <button type="submit">Sign In</button>
+          </form>
 
-          <button type="submit" class="login-btn">Sign In</button>
-        </form>
-
-        <div class="signup-link">
-          <p>
-            Don't have an account?
+          <p class="link-text">
+            No account?
             <a href="{{ url_for('register_page') }}">Create one</a>
           </p>
         </div>
