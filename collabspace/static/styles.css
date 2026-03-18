@@ -9,14 +9,10 @@ body {
   height: 100vh;
   background: url("bg.jpg") no-repeat center center/cover;
 }
-<<<<<<< Updated upstream
 
 body::before {
   content: "";
   position: absolute;
-=======
-Z .login-container {
->>>>>>> Stashed changes
   width: 100%;
   height: 100%;
   background: linear-gradient(120deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.4));
