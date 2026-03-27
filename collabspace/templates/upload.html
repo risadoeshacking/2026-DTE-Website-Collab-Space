@@ -1,0 +1,204 @@
+{% extends "layout.html" %} {% block title %}New Post{% endblock %} {% block
+head %}
+<style>
+  .main {
+    padding-top: 140px;
+  }
+  .form-container {
+    max-width: 550px;
+    width: 100%;
+    background: rgba(20, 20, 30, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 40px;
+    margin: 20px;
+  }
+  .form-title {
+    text-align: center;
+    color: white;
+    font-size: 32px;
+    margin-bottom: 35px;
+    font-weight: 600;
+  }
+  .input-group {
+    margin-bottom: 28px;
+  }
+  .input-label {
+    display: block;
+    color: #e0e0e0;
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+  .input-field,
+  textarea {
+    width: 100%;
+    padding: 18px 22px;
+    background: rgba(50, 50, 65, 0.8);
+    border: 2px solid rgba(80, 80, 100, 0.5);
+    border-radius: 14px;
+    color: white;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+  }
+  .input-field:focus,
+  textarea:focus {
+    outline: none;
+    border-color: #0095dd;
+    background: rgba(60, 60, 75, 0.9);
+    box-shadow: 0 0 0 4px rgba(0, 149, 221, 0.1);
+  }
+  .file-upload {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    background: rgba(50, 50, 65, 0.8);
+    border: 2px dashed rgba(80, 80, 100, 0.5);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .file-upload:hover {
+    border-color: #0095dd;
+    background: rgba(60, 60, 75, 0.9);
+  }
+  .file-upload input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+  }
+  .file-info {
+    flex: 1;
+    color: #ccc;
+  }
+  .file-preview {
+    max-width: 120px;
+    max-height: 80px;
+    border-radius: 8px;
+    margin-left: 15px;
+    display: none;
+  }
+  .button-group {
+    display: flex;
+    gap: 20px;
+    margin-top: 35px;
+  }
+  .btn {
+    flex: 1;
+    padding: 18px 30px;
+    border: none;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .btn-secondary {
+    background: rgba(80, 80, 100, 0.6);
+    color: #e0e0e0;
+  }
+  .btn-secondary:hover {
+    background: rgba(100, 100, 120, 0.8);
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #0095dd, #007bb5);
+    color: white;
+  }
+  .btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 149, 221, 0.4);
+  }
+  @media (max-width: 768px) {
+    .form-container {
+      margin: 15px;
+      padding: 30px 25px;
+    }
+    .form-title {
+      font-size: 28px;
+    }
+    .button-group {
+      flex-direction: column;
+    }
+    .btn {
+      padding: 16px;
+    }
+  }
+</style>
+{% endblock %} {% block body %}
+<div class="form-container">
+  <h1 class="form-title">Create New Post</h1>
+  <form method="POST" enctype="multipart/form-data">
+    <div class="input-group">
+      <label class="input-label">Post Title</label>
+      <input
+        type="text"
+        class="input-field"
+        name="title"
+        placeholder="e.g. Need help with CSS layout"
+        required
+      />
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Description</label>
+      <textarea
+        class="input-field"
+        name="description"
+        rows="6"
+        placeholder="What do you need help with? Include details about your project, skills needed, deadline etc."
+      ></textarea>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Project Image (optional)</label>
+      <div class="file-upload">
+        <input type="file" name="image" id="image-upload" accept="image/*" />
+        <div class="file-info">
+          <div style="font-weight: 500; margin-bottom: 5px">
+            Click to choose image
+          </div>
+          <div style="font-size: 14px; opacity: 0.8">JPG, PNG (max 5MB)</div>
+        </div>
+        <img class="file-preview" id="preview-img" />
+      </div>
+    </div>
+
+    <div class="button-group">
+      <button type="button" class="btn btn-secondary" onclick="history.back()">
+        Cancel
+      </button>
+      <button type="submit" class="btn btn-primary">Publish Post</button>
+    </div>
+  </form>
+</div>
+
+<script>
+
+  const fileUpload = document.getElementById("image-upload");
+  const fileInfo = document.querySelector(".file-info");
+  const previewImg = document.getElementById("preview-img");
+  let selectedFile = null;
+
+  fileUpload.addEventListener("change", function (e) {
+    selectedFile = e.target.files[0];
+    if (selectedFile) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        previewImg.src = e.target.result;
+        previewImg.style.display = "block";
+      };
+      reader.readAsDataURL(selectedFile);
+      fileInfo.innerHTML = `<div style="font-weight: 500;">${
+        selectedFile.name
+      }</div><div style="font-size: 14px; opacity: 0.8;">${Math.round(
+        selectedFile.size / 1024
+      )}KB</div>`;
+    }
+  });</script>
+{% endblock %}

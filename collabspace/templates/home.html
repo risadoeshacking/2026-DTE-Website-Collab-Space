@@ -1,241 +1,148 @@
-{% extends "layout.html" %} {% block title %}Home Feed | Collab Space{% endblock
-%} {% block head %}
+{% extends "layout.html" %} {% block title %}Feed{% endblock %} {% block head %}
 <style>
-  .feed-container {
+  .feed {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
-    padding: 40px 20px;
-    max-width: 1400px;
-    margin: 0 auto;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+    padding: 20px 0;
   }
-  .project-card {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    overflow: hidden;
+  .card {
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 12px;
+    padding: 20px;
     cursor: pointer;
-    transition: all 0.3s ease;
   }
-  .project-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-    border-color: rgba(53, 180, 255, 0.5);
+  .card:hover {
+    background: #333;
+    border-color: #0095dd;
   }
-  .card-banner {
-    height: 200px;
-    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+  .title {
+    font-size: 18px;
+    margin: 0 0 10px 0;
+    color: #fff;
+  }
+  .author {
+    color: #aaa;
+    font-size: 14px;
+    margin: 0 0 15px 0;
+  }
+  .stats {
+    color: #ccc;
+    font-size: 14px;
+  }
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    grid-column: 1 / -1;
+    color: #888;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    position: relative;
+    max-width: 500px;
   }
-  .card-banner img {
+  .empty h2 {
+    font-size: 36px;
+    margin: 0 0 10px 0;
+    background: linear-gradient(135deg, #0095dd, #35b4ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .empty p {
+    font-size: 18px;
+    margin: 0;
+    opacity: 0.7;
+  }
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
-  }
-  .card-body {
-    padding: 24px;
-  }
-  .badge {
-    display: inline-block;
-    font-size: 12px;
-    padding: 6px 12px;
-    border-radius: 20px;
-    background: rgba(53, 180, 255, 0.2);
-    color: #60a5fa;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  .card-title {
-    margin: 16px 0 8px 0;
-    color: white;
-    font-size: 1.3rem;
-    font-weight: 700;
-  }
-  .card-author {
-    color: #93c5fd;
-    font-size: 0.95rem;
-    margin-bottom: 12px;
-  }
-  .card-stats {
-    display: flex;
-    gap: 20px;
-    opacity: 0.8;
-    font-size: 0.9rem;
-  }
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
     background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(12px);
     display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-  }
-  .modal-overlay.active {
-    display: flex;
+    place-items: center;
+    z-index: 999;
   }
   .modal-box {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px);
-    width: 90%;
-    max-width: 1000px;
-    height: 80vh;
-    border-radius: 24px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: #333;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 450px;
+    max-height: 80vh;
+    overflow: auto;
   }
-  .modal-image {
-    background: #000;
-  }
-  .modal-content {
-    padding: 40px;
-    color: white;
-  }
-  .btn-like {
-    background: none;
-    border: none;
-    color: white;
+  .close {
+    float: right;
+    font-size: 30px;
     cursor: pointer;
-    padding: 12px;
-    border-radius: 12px;
-    transition: 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .btn-like:hover {
-    background: rgba(255, 255, 255, 0.1);
-  }
-  .liked {
-    color: #ef4444 !important;
-  }
-  #comments-list {
-    max-height: 200px;
-    overflow-y: auto;
-    background: rgba(255, 255, 255, 0.05);
-    padding: 20px;
-    border-radius: 12px;
-    margin-top: 20px;
-  }
-  .no-posts {
-    grid-column: 1/-1;
-    text-align: center;
-    color: #9ca3af;
-    padding: 60px;
-    font-size: 1.2rem;
-  }
-  @media (max-width: 768px) {
-    .modal-box {
-      grid-template-columns: 1fr;
-      height: 90vh;
-    }
+    color: #fff;
   }
 </style>
 {% endblock %} {% block body %}
-<div class="feed-container">
-  {% if posts %} {% for post in posts %}
-  <div class="project-card" onclick="openModal({{ post.id }})">
-    <div class="card-banner">
-      {% if post.image_path %}
-      <img
-        src="{{ url_for('static', filename=post.image_path) }}"
-        alt="Project image"
-      />
-      {% else %}
-      <div style="font-size: 3rem; opacity: 0.3">📱</div>
-      {% endif %}
-    </div>
-    <div class="card-body">
-      <span class="badge">{{ post.post_type.replace('_', ' ').title() }}</span>
-      <h3 class="card-title">{{ post.title }}</h3>
-      <p class="card-author">@{{ post.full_name }}</p>
-      <div class="card-stats">
-        <span>❤️ {{ post.like_count or 0 }}</span>
-        <span>💬 {{ post.comment_count or 0 }}</span>
-      </div>
+<div class="feed">
+  {% if posts %} {% for p in posts %}
+  <div class="card" onclick="openPost({{ p.id }})">
+    <div class="title">{{ p.title }}</div>
+    <div class="author">{{ p.full_name }}</div>
+    <div class="stats">
+      Likes: {{ p.like_count or 0 }} Comments: {{ p.comment_count or 0 }}
     </div>
   </div>
-  {% endfor %} {% else %}
-  <div class="no-posts">
-    <h2>No posts yet</h2>
-    <p>Be the first to create a project!</p>
-  </div>
-  {% endif %}
+  {% endfor %} {% endif %}
 </div>
 
-<div id="modal" class="modal-overlay" onclick="closeModal(event)">
-  <div class="modal-box">
-    <div class="modal-image" id="modal-img"></div>
-    <div class="modal-content">
-      <h1 id="modal-title"></h1>
-      <p id="modal-author" style="opacity: 0.8; margin-bottom: 20px"></p>
-      <div id="modal-desc" style="line-height: 1.7; margin-bottom: 30px"></div>
-      <div style="display: flex; gap: 15px; margin-bottom: 25px">
-        <button id="like-btn" class="btn-like">
-          ❤️ <span id="modal-likes">0</span>
-        </button>
-        <button
-          class="btn-like"
-          style="
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 12px;
-          "
-        >
-          Request Collab
-        </button>
-      </div>
-      <div id="comments-list">
-        <p style="opacity: 0.6">Loading comments...</p>
-      </div>
-    </div>
+<div class="modal" id="postModal" onclick="closePost(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <span class="close" onclick="closePost()">&times;</span>
+    <h2 id="ptitle"></h2>
+    <p id="pdesc"></p>
+    <p id="pauthor"></p>
+    <button
+      onclick="doLike()"
+      style="
+        background: #0095dd;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+      "
+    >
+      Like
+    </button>
+    <div id="pcomments"></div>
   </div>
 </div>
 
 <script>
   const posts = {{ posts|tojson|safe }};
-  let currentPostId = null;
+  let currId = null;
 
-  function openModal(id) {
-    const post = posts.find(p => p.id === id);
-    if (!post) return;
+  function openPost(id) {
+    const post = posts.find(p => p.id == id);
+    document.getElementById('ptitle').innerText = post.title;
+    document.getElementById('pdesc').innerText = post.description || 'no description';
+    document.getElementById('pauthor').innerText = 'by ' + post.full_name;
+    currId = id;
+    document.getElementById('postModal').style.display = 'grid';
 
-    document.getElementById('modal-title').textContent = post.title;
-    document.getElementById('modal-author').textContent = '@' + post.full_name;
-    document.getElementById('modal-desc').textContent = post.description || 'No description.';
-    document.getElementById('modal-likes').textContent = post.like_count || 0;
-    document.getElementById('modal-img').style.backgroundImage = post.image_path ? `url({{ url_for('static', filename='') }}${post.image_path})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-
-    currentPostId = id;
-    document.getElementById('modal').classList.add('active');
-
-    fetch(`/posts/${id}/comments`)
+    fetch('/posts/' + id + '/comments')
       .then(r => r.json())
-      .then(data => {
-        const cont = document.querySelector('#comments-list');
-        cont.innerHTML = data.comments.length ?
-          data.comments.map(c => `<div style="margin-bottom: 12px;"><strong>${c.full_name}</strong><br><small style="opacity: 0.7;">${c.content}</small></div>`).join('') :
-          '<p style="opacity: 0.6;">No comments yet. Be the first!</p>';
+      .then(d => {
+        document.getElementById('pcomments').innerHTML =
+          d.comments.map(c => `<div style="margin:10px 0"><b>${c.full_name}</b>: ${c.content}</div>`).join('') ||
+          '<p style="color:#aaa">no comments</p>';
       });
   }
 
-  function closeModal(event) {
-    if (event.target.classList.contains('modal-overlay')) {
-      document.getElementById('modal').classList.remove('active');
-    }
+  function closePost() {
+    document.getElementById('postModal').style.display = 'none';
   }
 
-  document.getElementById('like-btn').onclick = () => {
-    fetch(`/posts/${currentPostId}/like`, {method: 'POST'})
-      .then(() => location.reload());
-  };</script>
-{% block scripts %}{% endblock %} {% endblock %}
+  function doLike() {
+    fetch('/posts/' + currId + '/like', {method: 'POST'}).then(() => location.reload());
+  }</script>
+{% endblock %}

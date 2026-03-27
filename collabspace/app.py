@@ -1,16 +1,16 @@
 import sqlite3
+import time
+from werkzeug.utils import secure_filename
 from pathlib import Path
 from flask import Flask, request, render_template, redirect, url_for, session, jsonify, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-
 app.secret_key = "collab_space_nz_2026_secure_key"
 
 DB = Path("collab_space.db")
 
 def get_db():
-
     conn = sqlite3.connect(DB)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON;")
@@ -38,7 +38,7 @@ def login_page():
             session["full_name"] = user["full_name"]
             return redirect(url_for("home_feed"))
 
-        flash("Invalid email or password", "error")
+        flash("Wrong email or pw lol", "error")
     return render_template("login.html")
 
 @app.route("/register", methods=["GET", "POST"])
@@ -55,10 +55,10 @@ def register_page():
             db.execute("INSERT INTO users (full_name, email, password_hash) VALUES (?, ?, ?)",
                        (fullname, email, hashed_pw))
             db.commit()
-            flash("Registration successful! Please login.", "success")
+            flash("Account made! Login now", "success")
             return redirect(url_for("login_page"))
-        except sqlite3.IntegrityError:
-            flash("Email already exists.", "error")
+        except:
+            flash("Email used already", "error")
         finally:
             db.close()
     return render_template("register.html")
@@ -69,18 +69,67 @@ def home_feed():
         return redirect(url_for("login_page"))
 
     db = get_db()
-    uid = session["user_id"]
-
-    query =
-    posts = db.execute(query, (uid, uid)).fetchall()
+    posts = db.execute(
+        "SELECT p.*, u.full_name FROM posts p JOIN users u ON p.user_id = u.id ORDER BY p.created_at DESC").fetchall()
     db.close()
 
     return render_template("home.html", posts=posts)
 
+@app.route("/new", methods=["GET", "POST"])
+def new_post():
+    if "user_id" not in session:
+        return redirect(url_for("login_page"))
+
+    if request.method == "POST":
+        title = request.form["title"]
+        desc = request.form.get("description", "")
+        post_type = request.form["post_type"]
+        uid = session["user_id"]
+        image_path = None
+
+        if "image" in request.files:
+            file = request.files["image"]
+            if file and file.filename:
+                filename = f"posts_{uid}_{int(time.time())}_{secure_filename(file.filename)}"
+                filepath = f"static/posts/{filename}"
+                file.save(filepath)
+                image_path = f"posts/{filename}"
+
+        db = get_db()
+        db.execute("INSERT INTO posts (user_id, title, description, post_type, image_path, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))",
+                   (uid, title, desc, post_type, image_path))
+        db.commit()
+        db.close()
+        flash("Post created!", "success")
+        return redirect(url_for("home_feed"))
+
+    return render_template("upload.html")
+
+@app.route("/search")
+def search():
+    return "<h1>search comin soon</h1>"
+
+@app.route("/notifications")
+def notifications():
+    if "user_id" not in session:
+        return redirect(url_for("login_page"))
+    return "<h1>no notifs</h1>"
+
+@app.route("/profile")
+def profile():
+    if "user_id" not in session:
+        return redirect(url_for("login_page"))
+    return "<h1>my profile soon</h1>"
+
+@app.route("/about")
+def about():
+    return "<h1>about collab space - i made it</h1>"
+
 @app.route("/posts/<int:post_id>/comments")
 def get_comments(post_id):
     db = get_db()
-    comments = db.execute(, (post_id,)).fetchall()
+    comments = db.execute(
+        "SELECT c.content, u.full_name FROM comments c JOIN users u ON c.user_id = u.id WHERE c.post_id = ? ORDER BY c.id ASC", (post_id,)).fetchall()
     db.close()
     return jsonify({"comments": [dict(c) for c in comments]})
 
@@ -88,7 +137,7 @@ def get_comments(post_id):
 def toggle_like(post_id):
     uid = session.get("user_id")
     if not uid:
-        return jsonify({"error": "Auth required"}), 401
+        return jsonify({"error": "log in"}), 401
 
     db = get_db()
     existing = db.execute(
@@ -101,7 +150,7 @@ def toggle_like(post_id):
             "INSERT INTO likes (post_id, user_id) VALUES (?, ?)", (post_id, uid))
     db.commit()
     db.close()
-    return jsonify({"success": True})
+    return jsonify({"ok": True})
 
 @app.route("/logout")
 def logout():
