@@ -7,6 +7,23 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='styles.css') }}"
     />
+    <style>
+      .flash-msg {
+        padding: 15px;
+        margin: 20px;
+        border-radius: 8px;
+        text-align: center;
+        font-weight: bold;
+      }
+      .flash-error {
+        background: #ff4444;
+        color: white;
+      }
+      .flash-success {
+        background: #44dd44;
+        color: white;
+      }
+    </style>
   </head>
 
   <body>
@@ -20,6 +37,15 @@
 
           <h2>Create Account</h2>
           <p class="sub">Start your journey</p>
+
+          {% with messages = get_flashed_messages(with_categories=True) %} {% if
+          messages %} {% for category, message in messages %}
+          <div
+            class="flash-msg flash-{{ 'success' if category == 'success' else 'error' }}"
+          >
+            {{ message }}
+          </div>
+          {% endfor %} {% endif %} {% endwith %}
 
           <form method="POST" action="{{ url_for('register_page') }}">
             <input

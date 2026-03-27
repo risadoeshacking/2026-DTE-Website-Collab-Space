@@ -7,6 +7,16 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='styles.css') }}"
     />
+    <style>
+      .flash-error {
+        background: #ff4444;
+        color: white;
+        padding: 15px;
+        margin: 20px;
+        border-radius: 8px;
+        text-align: center;
+      }
+    </style>
   </head>
 
   <body>
@@ -28,6 +38,11 @@
           <h2>Login</h2>
           <p class="sub">Enter your details</p>
 
+          {% with messages = get_flashed_messages(with_categories=True) %} {% if
+          messages %} {% for category, message in messages %}
+          <div class="flash-error">{{ message }}</div>
+          {% endfor %} {% endif %} {% endwith %}
+
           <form method="POST" action="{{ url_for('login_page') }}">
             <input type="email" name="email" placeholder="Email" required />
             <input
@@ -47,5 +62,13 @@
         </div>
       </div>
     </div>
+    <script>
+      setTimeout(() => {
+        document.querySelectorAll(".flash-error").forEach((el) => {
+          el.style.transition = "opacity 1s";
+          el.style.opacity = "0";
+        });
+      }, 4000);
+    </script>
   </body>
 </html>
