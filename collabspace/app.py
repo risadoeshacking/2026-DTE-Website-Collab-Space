@@ -4,6 +4,7 @@ from werkzeug.utils import secure_filename
 from pathlib import Path
 from flask import Flask, request, render_template, redirect, url_for, session, jsonify, flash
 from werkzeug.security import generate_password_hash, check_password_hash
+import os
 
 app = Flask(__name__)
 app.secret_key = "collab_space_nz_2026_secure_key"
@@ -83,9 +84,11 @@ def new_post():
     if request.method == "POST":
         title = request.form["title"]
         desc = request.form.get("description", "")
-        post_type = request.form["post_type"]
+        post_type = request.form.get("post_type", "need_help")
         uid = session["user_id"]
         image_path = None
+
+        os.makedirs("static/posts", exist_ok=True)
 
         if "image" in request.files:
             file = request.files["image"]
