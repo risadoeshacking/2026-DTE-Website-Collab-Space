@@ -68,15 +68,12 @@ def register_page():
 def home_feed():
     if "user_id" not in session:
         return redirect(url_for("login_page"))
-
     db = get_db()
-
-posts = db.execute(
-    "SELECT p.*, u.full_name FROM posts p JOIN users u ON p.user_id = u.id ORDER BY p.created_at DESC LIMIT 10"
-).fetchall()
-db.close()
-
-return render_template("home.html", posts=posts)
+    posts = db.execute(
+        "SELECT p.*, u.full_name FROM posts p JOIN users u ON p.user_id = u.id ORDER BY p.created_at DESC LIMIT 10"
+    ).fetchall()
+    db.close()
+    return render_template("home.html", posts=posts)
 
 @app.route("/new", methods=["GET", "POST"])
 def new_post():
