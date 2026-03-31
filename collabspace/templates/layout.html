@@ -70,12 +70,9 @@
         text-align: center;
       }
       .main {
-        margin-left: 90px;
-        padding: 140px 20px 20px;
+        margin-left: 70px;
+        padding: 80px 20px 20px;
         min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
       }
       @media (max-width: 768px) {
         .sidebar {
@@ -94,11 +91,13 @@
     {% block head %}{% endblock %}
   </head>
   <body>
+    {% if request.endpoint == 'home_feed' %}
     <img
       src="{{ url_for('static', filename='text_logo.png') }}"
       class="logo"
       alt="Collab Space"
     />
+    {% endif %}
     <div class="sidebar">
       <a href="/">
         <img src="{{ url_for('static', filename='icons/home.svg') }}" alt="" />
