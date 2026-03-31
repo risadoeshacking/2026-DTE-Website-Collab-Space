@@ -66,17 +66,7 @@ def register_page():
 
 @app.route("/home")
 def home_feed():
-
-== == == =
-   db = get_db()
-    posts = db.execute(
-        "SELECT p.*, u.full_name FROM posts p JOIN users u ON p.user_id = u.id ORDER BY p.created_at DESC").fetchall()
-    db.close()
-
->>>>>> > main-upstream
-   return render_template("home.html", posts=posts)
-== == == =
-   if "user_id" not in session:
+    if "user_id" not in session:
         return redirect(url_for("login_page"))
     db = get_db()
     posts = db.execute(
@@ -84,15 +74,6 @@ def home_feed():
     ).fetchall()
     db.close()
     return render_template("home.html", posts=posts)
-== =====
-
-   db = get_db()
-    posts = db.execute(
-        "SELECT p.*, u.full_name FROM posts p JOIN users u ON p.user_id = u.id ORDER BY p.created_at DESC").fetchall()
-    db.close()
-
->>>>>> > main-upstream
-   return render_template("home.html", posts=posts)
 
 @app.route("/new", methods=["GET", "POST"])
 def new_post():
