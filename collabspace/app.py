@@ -109,7 +109,30 @@ def new_post():
 
 @app.route("/search")
 def search():
-    return "<h1>search comin soon</h1>"
+
+
+    query = request.args.get('q', '').strip()
+    type_filter = request.args.get('type_filter', 'all').strip()
+
+    db = get_db()
+
+    sql =
+    params = []
+
+    if query:
+        sql += " AND (p.title LIKE ? OR p.description LIKE ?)"
+        params.extend(['%' + query + '%', '%' + query + '%'])
+
+    if type_filter != 'all':
+        sql += " AND p.post_type = ?"
+        params.append(type_filter)
+
+    sql += " ORDER BY p.created_at DESC"
+
+    posts = db.execute(sql, params).fetchall()
+    db.close()
+
+    return render_template('search.html', posts=posts, query=query, type_filter=type_filter)
 
 @app.route("/notifications")
 def notifications():
