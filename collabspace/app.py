@@ -1,9 +1,9 @@
 import sqlite3
 import time
-from werkzeug.utils import secure_filename
 from pathlib import Path
 from flask import Flask, request, render_template, redirect, url_for, session, jsonify, flash
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 import os
 
 app = Flask(__name__)
@@ -16,6 +16,20 @@ def get_db():
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON;")
     return conn
+
+def init_db():
+    try:
+        db = get_db()
+        with open('schema.sql', 'r') as f:
+            db.executescript(f.read())
+        db.commit()
+        print(" * DB tables created/updated!")
+    except Exception as e:
+        print(" * DB already good or error:", e)
+    finally:
+        db.close()
+
+init_db()
 
 @app.route("/")
 def index():
@@ -37,6 +51,7 @@ def login_page():
         if user and check_password_hash(user["password_hash"], password):
             session["user_id"] = user["id"]
             session["full_name"] = user["full_name"]
+            session["username"] = user["username"] or ""
             return redirect(url_for("home_feed"))
 
         flash("Wrong email or pw lol", "error")
@@ -56,13 +71,18 @@ def register_page():
             db.execute("INSERT INTO users (full_name, email, password_hash) VALUES (?, ?, ?)",
                        (fullname, email, hashed_pw))
             db.commit()
-            flash("Account made! Login now", "success")
+            flash("Account made! Login now :)", "success")
             return redirect(url_for("login_page"))
         except:
-            flash("Email used already", "error")
-        finally:
-            db.close()
+            flash("Email already used sorry", "error")
+        db.close()
     return render_template("register.html")
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("Logged out ok!", "success")
+    return redirect(url_for("login_page"))
 
 @app.route("/home")
 def home_feed():
@@ -88,98 +108,148 @@ def new_post():
         image_path = None
 
         os.makedirs("static/posts", exist_ok=True)
-
         if "image" in request.files:
             file = request.files["image"]
             if file and file.filename:
-                filename = f"posts_{uid}_{int(time.time())}_{secure_filename(file.filename)}"
-                filepath = f"static/posts/{filename}"
+                filename = "posts_%s_%d_%s" % (
+                    uid, int(time.time()), secure_filename(file.filename))
+                filepath = "static/posts/" + filename
                 file.save(filepath)
-                image_path = f"posts/{filename}"
+                image_path = "posts/" + filename
 
         db = get_db()
         db.execute("INSERT INTO posts (user_id, title, description, post_type, image_path, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))",
                    (uid, title, desc, post_type, image_path))
         db.commit()
         db.close()
-        flash("Post created!", "success")
+        flash("Post made!", "success")
         return redirect(url_for("home_feed"))
 
     return render_template("upload.html")
 
-@app.route("/search")
-def search():
+@app.route("/request_collab/<int:post_id>", methods=["POST"])
+def request_collab(post_id):
+    if "user_id" not in session:
+        return redirect(url_for("login_page"))
 
-    query = request.args.get('q', '').strip()
-    type_filter = request.args.get('type_filter', 'all').strip()
-
+    from_user = session["user_id"]
     db = get_db()
 
-    sql =
-    params = []
+    post = db.execute("SELECT user_id FROM posts WHERE id=?",
+                      (post_id,)).fetchone()
+    if not post or post["user_id"] == from_user:
+        flash("Bad post!")
+        db.close()
+        return redirect(url_for("home_feed"))
 
-    if query:
-        sql += " AND (p.title LIKE ? OR p.description LIKE ?)"
-        params.extend(['%' + query + '%', '%' + query + '%'])
+    existing = db.execute(
+        "SELECT id FROM collab_requests WHERE post_id=? AND from_user_id=? AND status='pending'", (post_id, from_user)).fetchone()
+    if existing:
+        flash("Already asked!")
+        db.close()
+        return redirect(url_for("home_feed"))
 
-    if type_filter != 'all':
-        sql += " AND p.post_type = ?"
-        params.append(type_filter)
+    db.execute("INSERT INTO collab_requests (post_id, from_user_id, to_user_id, status) VALUES (?, ?, ?, 'pending')",
+               (post_id, from_user, post["user_id"]))
+    db.commit()
 
-    sql += " ORDER BY p.created_at DESC"
+    post_title = db.execute(
+        "SELECT title FROM posts WHERE id=?", (post_id,)).fetchone()["title"]
+    requester_name = db.execute(
+        "SELECT full_name FROM users WHERE id=?", (from_user,)).fetchone()["full_name"]
+    create_notification(post["user_id"], "new_collab_request",
+                        "{} wants to collab on '{}'".format(requester_name, post_title))
 
-    posts = db.execute(sql, params).fetchall()
     db.close()
+    flash("Request sent!")
+    return redirect(url_for("home_feed"))
 
-    return render_template('search.html', posts=posts, query=query, type_filter=type_filter)
+@app.route("/approve_request/<int:req_id>", methods=["POST"])
+def approve_request(req_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Login!"}), 401
+
+    to_user = session["user_id"]
+    db = get_db()
+    req = db.execute(
+        "SELECT * FROM collab_requests WHERE id=? AND to_user_id=? AND status='pending'", (req_id, to_user)).fetchone()
+    if not req:
+        db.close()
+        return jsonify({"error": "No request"}), 404
+
+    db.execute(
+        "UPDATE collab_requests SET status='accepted' WHERE id=?", (req_id,))
+    post_title = db.execute(
+        "SELECT title FROM posts WHERE id=?", (req["post_id"],)).fetchone()["title"]
+    create_notification(req["from_user_id"], "request_accepted",
+                        "Your collab request for '{}' accepted by {}".format(post_title, session["full_name"]))
+    db.commit()
+    db.close()
+    return jsonify({"success": True})
+
+@app.route("/decline_request/<int:req_id>", methods=["POST"])
+def decline_request(req_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Login!"}), 401
+
+    to_user = session["user_id"]
+    db = get_db()
+    req = db.execute(
+        "SELECT * FROM collab_requests WHERE id=? AND to_user_id=? AND status='pending'", (req_id, to_user)).fetchone()
+    if not req:
+        db.close()
+        return jsonify({"error": "No request"}), 404
+
+    db.execute(
+        "UPDATE collab_requests SET status='rejected' WHERE id=?", (req_id,))
+    post_title = db.execute(
+        "SELECT title FROM posts WHERE id=?", (req["post_id"],)).fetchone()["title"]
+    create_notification(req["from_user_id"], "request_rejected",
+                        "Your collab request for '{}' was declined.".format(post_title))
+    db.commit()
+    db.close()
+    return jsonify({"success": True})
+
+@app.route("/search")
+def search():
+    query = request.args.get('q', '').strip()
+    db = get_db()
+
+    posts = []
+    if query:
+        posts_sql =
+        posts = db.execute(posts_sql, ('%' + query + '%',
+                           '%' + query + '%')).fetchall()
+
+    users = []
+    if query:
+        users_sql =
+        users = db.execute(users_sql, ('%' + query + '%',
+                           '%' + query + '%', '%' + query + '%')).fetchall()
+
+    db.close()
+    return render_template('search.html', query=query, users=users, posts=posts)
+
+def create_notification(user_id, notif_type, message):
+    db = get_db()
+    db.execute("INSERT INTO notifications (user_id, type, message, is_read) VALUES (?, ?, ?, 0)",
+               (user_id, notif_type, message))
+    db.commit()
+    db.close()
 
 @app.route("/notifications")
 def notifications():
     if "user_id" not in session:
         return redirect(url_for("login_page"))
-    return "<h1>no notifs</h1>"
-
-@app.route("/profile")
-def profile():
-    if "user_id" not in session:
-        return redirect(url_for("login_page"))
-    return "<h1>my profile soon</h1>"
-
-@app.route("/about")
-def about():
-    return "<h1>about collab space - i made it</h1>"
-
-@app.route("/posts/<int:post_id>/comments")
-def get_comments(post_id):
+    user_id = session["user_id"]
     db = get_db()
-    comments = db.execute(
-        "SELECT c.content, u.full_name FROM comments c JOIN users u ON c.user_id = u.id WHERE c.post_id = ? ORDER BY c.id ASC", (post_id,)).fetchall()
+    pending_requests = db.execute(, (user_id,)).fetchall()
+    all_notifs = db.execute(
+        "SELECT * FROM notifications WHERE user_id=? ORDER BY is_read ASC, created_at DESC", (user_id,)).fetchall()
+    unread = [n for n in all_notifs if n['is_read'] == 0]
+    read_notifs = [n for n in all_notifs if n['is_read'] == 1]
     db.close()
-    return jsonify({"comments": [dict(c) for c in comments]})
-
-@app.route("/posts/<int:post_id>/like", methods=["POST"])
-def toggle_like(post_id):
-    uid = session.get("user_id")
-    if not uid:
-        return jsonify({"error": "log in"}), 401
-
-    db = get_db()
-    existing = db.execute(
-        "SELECT 1 FROM likes WHERE post_id=? AND user_id=?", (post_id, uid)).fetchone()
-    if existing:
-        db.execute(
-            "DELETE FROM likes WHERE post_id=? AND user_id=?", (post_id, uid))
-    else:
-        db.execute(
-            "INSERT INTO likes (post_id, user_id) VALUES (?, ?)", (post_id, uid))
-    db.commit()
-    db.close()
-    return jsonify({"ok": True})
-
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect(url_for("login_page"))
+    return render_template("notifications.html", pending_requests=pending_requests, unread=unread, read_notifs=read_notifs)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')
