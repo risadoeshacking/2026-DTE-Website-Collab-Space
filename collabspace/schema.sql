@@ -3,12 +3,19 @@ PRAGMA foreign_keys = ON;
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   full_name TEXT NOT NULL,
+  username TEXT UNIQUE,
   email TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
   year_level INTEGER,
   bio TEXT,
+  availability TEXT,
+  profile_pic TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+INSERT OR IGNORE INTO skills (name) VALUES
+('Python'), ('JavaScript'), ('HTML/CSS'), ('React'), ('Node.js'),
+('Java'), ('C++'), ('SQL'), ('Git'), ('Docker'), ('UI/UX'), ('Project Management');
 
 CREATE TABLE IF NOT EXISTS posts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -91,6 +98,17 @@ CREATE TABLE IF NOT EXISTS ratings (
   CHECK (rater_id != rated_user_id)
 );
 
+CREATE TABLE IF NOT EXISTS notifications (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  type TEXT NOT NULL,
+  message TEXT NOT NULL,
+  is_read INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, is_read, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_posts_created_at ON posts(created_at);
 CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id);
 CREATE INDEX IF NOT EXISTS idx_comments_post_id ON comments(post_id);

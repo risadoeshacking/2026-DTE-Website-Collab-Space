@@ -45,16 +45,37 @@
     color: #aaa;
     font-size: 14px;
   }
+  .collab-btn {
+    background: #00ff00;
+    color: black;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 10px;
+    font-size: 14px;
+    width: 100%;
+  }
+  .collab-btn:hover {
+    background: #00cc00;
+  }
 </style>
 {% endblock %} {% block body %}
 <div class="feed">
   {% for p in posts %}
-  <div class="card" onclick="alert('{{ p.title }} by {{ p.full_name }}')">
+  <div class="card">
     {% if p.image_path %}
     <img src="/static/{{ p.image_path }}" />
     {% endif %}
     <div class="title">{{ p.title }}</div>
     <div class="author">{{ p.full_name }}</div>
+    <form
+      action="/request_collab/{{ p.id }}"
+      method="post"
+      style="margin-top: 10px"
+    >
+      <button type="submit" class="collab-btn">Request Collab</button>
+    </form>
   </div>
   {% endfor %}
 </div>
