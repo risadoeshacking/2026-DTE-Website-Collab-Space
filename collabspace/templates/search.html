@@ -30,11 +30,11 @@
 
 
   {% if users %}
-  <div class="section-header">👥 Users</div>
+  <div class="section-header">Users</div>
   <div class="users-grid">
     {% for user in users %}
     <div class="user-card">
-      <div class="user-avatar">👤</div>
+      <div class="user-avatar"></div>
       <div class="user-info">
         <h4>{{ user.full_name }}</h4>
         <p class="user-email">{{ user.email }}</p>
@@ -80,7 +80,7 @@
   {% endif %} {% else %}
 
   <div class="welcome-search">
-    <h2>🔍 Search CollabSpace</h2>
+    <h2>Search CollabSpace</h2>
     <p>Find users, projects, and collaborators by name or keywords</p>
     <p>Press Enter to search</p>
   </div>
