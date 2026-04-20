@@ -49,7 +49,7 @@
 
 
   {% if posts %}
-  <div class="section-header">📝 Posts</div>
+  <div class="section-header">Posts</div>
   <div class="posts-grid">
     {% for post in posts %}
     <div class="post-card">
@@ -73,7 +73,7 @@
         endif %}
       </p>
 
-      <div class="post-author">👤 {{ post.full_name }}</div>
+      <div class="post-author">{{ post.full_name }}</div>
     </div>
     {% endfor %}
   </div>
