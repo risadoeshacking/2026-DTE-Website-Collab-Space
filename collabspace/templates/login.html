@@ -38,12 +38,12 @@
           <h2>Login</h2>
           <p class="sub">Enter your details</p>
 
-          {% with messages = get_flashed_messages(with_categories=True) %} {% if
+          {% with messages = get_flashed_messages(with_categories=true) %} {% if
           messages %} {% for category, message in messages %}
           <div class="flash-error">{{ message }}</div>
           {% endfor %} {% endif %} {% endwith %}
 
-          <form method="POST" action="{{ url_for('login_page') }}">
+          <form method="POST" action="{{ url_for('login') }}">
             <input type="email" name="email" placeholder="Email" required />
             <input
               type="password"
@@ -57,7 +57,7 @@
 
           <p class="link-text">
             No account?
-            <a href="{{ url_for('register_page') }}">Create one</a>
+            <a href="{{ url_for('register') }}">Create one</a>
           </p>
         </div>
       </div>

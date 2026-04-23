@@ -1,4 +1,5 @@
+venv/
 .venv/
-collab_space.db
 __pycache__/
-.DS_Store
+*.pyc
+.env

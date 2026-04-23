@@ -47,7 +47,7 @@
           </div>
           {% endfor %} {% endif %} {% endwith %}
 
-          <form method="POST" action="{{ url_for('register_page') }}">
+          <form method="POST" action="{{ url_for('register') }}">
             <input
               type="text"
               name="fullname"
@@ -67,7 +67,7 @@
 
           <p class="link-text">
             Already have one?
-            <a href="{{ url_for('login_page') }}">Login</a>
+            <a href="{{ url_for('login') }}">Login</a>
           </p>
         </div>
       </div>
