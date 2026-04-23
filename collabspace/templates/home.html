@@ -1,16 +1,18 @@
-{% extends "layout.html" %} {% block title %}Feed{% endblock %} {% block head %}
+{% extends "layout.html" %} {% block title %} Feed {% endblock %} {% block head
+%}
 <style>
   .feed {
-    padding: 0;
+    padding: 40px 40px 20px;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px 40px;
+    margin: 0 auto;
   }
   .main {
     margin-left: 70px !important;
     padding-top: 60px !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
   }
   .logo {
     top: 10px !important;
@@ -44,39 +46,46 @@
   .author {
     color: #aaa;
     font-size: 14px;
-  }
-  .collab-btn {
-    background: #00ff00;
-    color: black;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-top: 10px;
-    font-size: 14px;
-    width: 100%;
-  }
-  .collab-btn:hover {
-    background: #00cc00;
+    margin-bottom: 12px;
   }
 </style>
 {% endblock %} {% block body %}
 <div class="feed">
   {% for p in posts %}
-  <div class="card">
+  <div
+    class="card post-clickable"
+    data-post-id="{{ p.id }}"
+    data-post-title="{{ p.title }}"
+    data-post-desc="{{ p.description or '' }}"
+    data-post-image="{{ p.image_path or '' }}"
+    data-post-author="{{ p.full_name }}"
+    data-post-type="General"
+  >
     {% if p.image_path %}
     <img src="/static/{{ p.image_path }}" />
     {% endif %}
     <div class="title">{{ p.title }}</div>
     <div class="author">{{ p.full_name }}</div>
     <form
+      class="collab-hide"
       action="/request_collab/{{ p.id }}"
       method="post"
-      style="margin-top: 10px"
+      style="margin-top: 10px; display: none"
     >
       <button type="submit" class="collab-btn">Request Collab</button>
     </form>
   </div>
   {% endfor %}
 </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".collab-btn").forEach((btn) => {
+      btn.addEventListener("click", async function (e) {
+        e.preventDefault();
+        const form = this.closest("form");
+        await window.handleCollabRequest(form.action, this);
+      });
+    });
+  });</script>
 {% endblock %}

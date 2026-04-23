@@ -91,7 +91,7 @@
     {% block head %}{% endblock %}
   </head>
   <body>
-    {% if request.endpoint == 'home_feed' %}
+    {% if request.endpoint == 'feed' %}
     <img
       src="{{ url_for('static', filename='text_logo.png') }}"
       class="logo"
@@ -110,11 +110,33 @@
         />
         <div class="tooltip">Search</div>
       </a>
-      <a href="/notifications">
+      <a href="/notifications" id="notif-link">
         <img
           src="{{ url_for('static', filename='icons/notification.svg') }}"
           alt=""
         />
+        <span
+          id="notif-badge"
+          class="notif-badge"
+          style="
+            display: none;
+            position: absolute;
+            top: 5px;
+            right: -5px;
+            background: #ff4444;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(255, 68, 68, 0.5);
+          "
+          >0</span
+        >
         <div class="tooltip">Notifications</div>
       </a>
       <a href="/new">
@@ -124,5 +146,133 @@
     </div>
     <div class="main">{% block body %}{% endblock %}</div>
     {% block scripts %}{% endblock %}
+
+
+    <div id="postModal" class="post-modal">
+      <div class="modal-backdrop"></div>
+      <div class="modal-content">
+        <button class="modal-close">&times;</button>
+        <div class="modal-header">
+          <img id="modal-img" src="" alt="Post Image" class="modal-img" />
+          <div class="modal-type" id="modal-type"></div>
+        </div>
+        <h2 id="modal-title"></h2>
+        <p id="modal-desc" class="modal-desc"></p>
+        <div class="modal-author" id="modal-author"></div>
+        <form id="modal-form" method="post" style="display: none">
+
+        </form>
+        <button id="modal-collab" class="collab-btn">Request Collab</button>
+      </div>
+    </div>
+
+    <script>
+
+      function updateNotifBadge() {
+        fetch("/api/notif_count")
+          .then((r) => r.json())
+          .then((data) => {
+            const badge = document.getElementById("notif-badge");
+            const count = data.count || 0;
+            badge.textContent = count > 99 ? "99+" : count;
+            badge.style.display = count > 0 ? "flex" : "none";
+          })
+          .catch(() => {});
+      }
+
+      if (document.getElementById("notif-link")) {
+        updateNotifBadge();
+        setInterval(updateNotifBadge, 10000);
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const modal = document.getElementById("postModal");
+        const backdrop = modal.querySelector(".modal-backdrop");
+        const closeBtn = modal.querySelector(".modal-close");
+        const collabBtn = document.getElementById("modal-collab");
+        const form = document.getElementById("modal-form");
+
+        document.querySelectorAll(".post-clickable").forEach((card) => {
+          card.addEventListener("click", function (e) {
+            if (e.target.closest("form, .collab-btn")) return;
+
+            const id = this.dataset.postId;
+            const title = this.dataset.postTitle;
+            const desc = this.dataset.postDesc;
+            const img = this.dataset.postImage;
+            const author = this.dataset.postAuthor;
+            const type = this.dataset.postType || "General";
+
+            document.getElementById("modal-title").textContent = title;
+            document.getElementById("modal-desc").textContent = desc;
+            document.getElementById(
+              "modal-author"
+            ).textContent = `By ${author}`;
+            document.getElementById("modal-type").textContent = type;
+
+            if (img) {
+              document.getElementById("modal-img").src = `/static/${img}`;
+              document.getElementById("modal-img").style.display = "block";
+            } else {
+              document.getElementById("modal-img").style.display = "none";
+            }
+
+            form.action = `/request_collab/${id}`;
+            collabBtn.onclick = function (e) {
+              window.handleCollabRequest(form.action, collabBtn);
+            };
+
+            modal.classList.add("show");
+          });
+        });
+
+        function closeModal() {
+          modal.classList.remove("show");
+        }
+
+        closeBtn.onclick = closeModal;
+        backdrop.onclick = closeModal;
+
+        window.handleCollabRequest = async function (url, button) {
+          const originalText = button.textContent;
+          button.disabled = true;
+          button.textContent = "Sending...";
+
+          try {
+            const res = await fetch(url, { method: "POST" });
+            if (!res.ok) {
+              throw new Error(`Server error: ${res.status}`);
+            }
+            const data = await res.json();
+
+            if (data.success) {
+              button.textContent = "✅ Requested!";
+              button.style.background = "#ccc";
+              button.style.cursor = "default";
+              if (window.updateNotifBadge) window.updateNotifBadge();
+              return true;
+            } else {
+              alert(data.error || "Server error");
+              return false;
+            }
+          } catch (err) {
+            console.error("Collab request error:", err);
+            if (err.message.includes("401")) {
+              alert("Please login first");
+            } else if (err.message.includes("Network")) {
+              alert("Network issue - check connection and try again");
+            } else {
+              alert(`Request failed: ${err.message}`);
+            }
+            return false;
+          } finally {
+            button.disabled = false;
+            if (!button.textContent.includes("✅")) {
+              button.textContent = originalText;
+            }
+          }
+        };
+      });
+    </script>
   </body>
 </html>

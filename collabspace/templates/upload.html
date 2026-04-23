@@ -37,13 +37,13 @@ head %}
   .input-field,
   textarea {
     width: 100%;
-    padding: 18px 22px;
+    padding: 16px 20px;
     background: rgba(50, 50, 65, 0.8);
     border: 2px solid rgba(80, 80, 100, 0.5);
-    border-radius: 14px;
+    border-radius: 12px;
     color: white;
     font-size: 16px;
-    transition: all 0.3s ease;
+    transition: 0.2s;
     box-sizing: border-box;
   }
   .input-field:focus,
@@ -149,6 +149,8 @@ head %}
       />
     </div>
 
+
+
     <div class="input-group">
       <label class="input-label">Description</label>
       <textarea
@@ -167,9 +169,9 @@ head %}
           <div style="font-weight: 500; margin-bottom: 5px">
             Click to choose image
           </div>
-          <div style="font-size: 14px; opacity: 0.8">JPG, PNG (max 5MB)</div>
+          <div style="font-size: 14px; opacity: 0.8">JPG or PNG (max 5MB)</div>
         </div>
-        <img class="file-preview" id="preview-img" />
+        <img class="file-preview" id="preview-img" alt="preview" />
       </div>
     </div>
 
@@ -179,13 +181,12 @@ head %}
       <button type="button" class="btn btn-secondary" onclick="history.back()">
         Cancel
       </button>
-      <button type="submit" class="btn btn-primary">Publish Post</button>
+      <button type="submit" class="btn btn-primary">Post</button>
     </div>
   </form>
 </div>
 
 <script>
-
   const fileUpload = document.getElementById("image-upload");
   const fileInfo = document.querySelector(".file-info");
   const previewImg = document.getElementById("preview-img");
@@ -205,6 +206,10 @@ head %}
       }</div><div style="font-size: 14px; opacity: 0.8;">${Math.round(
         selectedFile.size / 1024
       )}KB</div>`;
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        alert("File too big");
+        return;
+      }
     }
   });</script>
 {% endblock %}
