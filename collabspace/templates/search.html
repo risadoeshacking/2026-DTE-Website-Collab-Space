@@ -1,89 +1,142 @@
-<!DOCTYPE html>
 {% extends "layout.html" %} {% block title %}Search - CollabSpace{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='search.css') }}" />
 {% endblock %} {% block body %}
 
-<div class="main-content">
+<div class="search-box">
+  <h1 class="search-heading">Find collaborators & projects</h1>
 
   <form method="GET" action="/search" class="search-form">
     <input
       type="text"
       name="q"
       class="search-input"
-      placeholder="Search users, posts, projects... (press Enter)"
+      placeholder="Search by name, email, or keyword..."
       value="{{ query or '' }}"
       autofocus
       aria-label="Search"
     />
+    <button type="submit" class="search-btn">Search</button>
   </form>
+</div>
 
-  {% if query %}
+{% if not query %}
+<div class="welcome-box">
+  <p>
+    Type a name or keyword above and press <strong>Enter</strong> to search.
+  </p>
+</div>
+{% endif %} {% if query %}
 
-  <div class="results-summary">
-    {% set total = (users|length + posts|length) %} Found {{ total }} result{{
-    's' if total != 1 else '' }} for "<strong>{{ query }}</strong>" {%- if
-    users|length > 0 %}, {{ users|length }} user{{ 's' if users|length != 1 else
-    '' }}{% endif -%} {%- if posts|length > 0 %}, {{ posts|length }} post{{ 's'
-    if posts|length != 1 else '' }}{% endif -%}
-  </div>
+<div class="result-count">
+  {% set total = users|length + posts|length %} Found
+  <strong>{{ total }}</strong> result{% if total != 1 %}s{% endif %} for "{{
+  query }}"
+</div>
 
-
-  {% if users %}
-  <div class="section-header">Users</div>
-  <div class="users-grid">
-    {% for user in users %}
-    <div class="user-card">
-      <div class="user-avatar"></div>
-      <div class="user-info">
-        <h4>{{ user.full_name }}</h4>
-        <p class="user-email">{{ user.email }}</p>
-        {% if user.bio %}
-        <p class="user-bio">{{ user.bio[:80] }}...</p>
-        {% endif %}
-      </div>
+{% if users %}
+<h2 class="section-title">People</h2>
+<div class="users-list">
+  {% for user in users %}
+  <div class="user-item">
+    <div class="user-avatar">
+      {{ user.full_name[0] if user.full_name else '?' }}
     </div>
-    {% endfor %}
-  </div>
-  {% endif %}
-
-
-  {% if posts %}
-  <div class="section-header">Posts</div>
-  <div class="posts-grid">
-    {% for post in posts %}
-    <div class="post-card">
-      {% if post.image_path %}
-      <img
-        src="/static/{{ post.image_path }}"
-        alt="{{ post.title }}"
-        class="post-img"
-        loading="lazy"
-      />
+    <div class="user-details">
+      <h3>{{ user.full_name }}</h3>
+      <p class="user-email">{{ user.email }}</p>
+      {% if user.bio %}
+      <p class="user-bio">
+        {{ user.bio[:100] }}{% if user.bio|length > 100 %}...{% endif %}
+      </p>
       {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %} {% if posts %}
+<h2 class="section-title">Posts</h2>
+<div class="posts-list">
+  {% for post in posts %}
+  <div
+    class="post-item post-clickable"
+    data-post-id="{{ post.id }}"
+    data-post-title="{{ post.title }}"
+    data-post-desc="{{ post.description or '' }}"
+    data-post-image="{{ post.image_path or '' }}"
+    data-post-author="{{ post.full_name }}"
+    data-post-type="{{ post.post_type.replace('_', ' ').title() }}"
+  >
+    {% if post.image_path %}
+    <img
+      src="/static/{{ post.image_path }}"
+      alt="{{ post.title }}"
+      class="post-image"
+    />
+    {% else %}
+    <div class="post-image placeholder-img">No Image</div>
+    {% endif %}
 
-      <div class="type-badge">
-        {{ post.post_type.replace('_', ' ').title() }}
-      </div>
-
+    <div class="post-body">
+      <span class="post-tag"
+        >{{ post.post_type.replace('_', ' ').title() }}</span
+      >
       <h3 class="post-title">{{ post.title }}</h3>
-
       <p class="post-desc">
-        {{ post.description[:120] }}{% if post.description|length > 120 %}...{%
+        {{ post.description[:140] }}{% if post.description|length > 140 %}...{%
         endif %}
       </p>
+      <p class="post-author">By {{ post.full_name }}</p>
 
-      <div class="post-author">{{ post.full_name }}</div>
+      <form
+        action="/request_collab/{{ post.id }}"
+        method="post"
+        class="collab-form"
+      >
+        <button type="submit" class="collab-btn">Request Collab</button>
+      </form>
     </div>
-    {% endfor %}
   </div>
-  {% endif %} {% else %}
-
-  <div class="welcome-search">
-    <h2>Search CollabSpace</h2>
-    <p>Find users, projects, and collaborators by name or keywords</p>
-    <p>Press Enter to search</p>
-  </div>
-  {% endif %}
+  {% endfor %}
 </div>
+{% endif %} {% if users|length == 0 and posts|length == 0 %}
+<div class="no-results">
+  <h2>No results found</h2>
+  <p>Try a different keyword or check your spelling.</p>
+</div>
+{% endif %} {% endif %}
+
+<script>
+  document.querySelectorAll(".collab-btn").forEach(function (btn) {
+    btn.addEventListener("click", async function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      var form = this.closest("form");
+      var originalText = this.textContent;
+
+      this.disabled = true;
+      this.textContent = "Sending...";
+
+      try {
+        var res = await fetch(form.action, { method: "POST" });
+        var data = await res.json();
+
+        if (data.success) {
+          this.textContent = "Requested!";
+          this.style.background = "#ccc";
+          this.style.cursor = "default";
+        } else {
+          alert(data.error || "Something went wrong");
+          this.disabled = false;
+          this.textContent = originalText;
+        }
+      } catch (err) {
+        alert("Network error - please try again");
+        this.disabled = false;
+        this.textContent = originalText;
+      }
+    });
+  });</script>
+
 {% endblock %}
