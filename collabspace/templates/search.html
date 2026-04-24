@@ -3,140 +3,143 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='search.css') }}" />
 {% endblock %} {% block body %}
 
-<div class="search-box">
-  <h1 class="search-heading">Find collaborators & projects</h1>
+<div class="search-container">
+  <div class="search-box">
+    <h1 class="search-heading">Find collaborators & projects</h1>
 
-  <form method="GET" action="/search" class="search-form">
-    <input
-      type="text"
-      name="q"
-      class="search-input"
-      placeholder="Search by name, email, or keyword..."
-      value="{{ query or '' }}"
-      autofocus
-      aria-label="Search"
-    />
-    <button type="submit" class="search-btn">Search</button>
-  </form>
-</div>
+    <form method="GET" action="/search" class="search-form">
+      <input
+        type="text"
+        name="q"
+        class="search-input"
+        placeholder="Search by name, email, or keyword..."
+        value="{{ query or '' }}"
+        autofocus
+        aria-label="Search"
+      />
+      <button type="submit" class="search-btn">Search</button>
+    </form>
+  </div>
 
-{% if not query %}
-<div class="welcome-box">
-  <p>
-    Type a name or keyword above and press <strong>Enter</strong> to search.
-  </p>
-</div>
-{% endif %} {% if query %}
+  {% if not query %}
+  <div class="welcome-box">
+    <p>
+      Type a name or keyword above and press <strong>Enter</strong> to search.
+    </p>
+  </div>
+  {% endif %} {% if query %}
 
-<div class="result-count">
-  {% set total = users|length + posts|length %} Found
-  <strong>{{ total }}</strong> result{% if total != 1 %}s{% endif %} for "{{
-  query }}"
-</div>
+  <div class="result-count">
+    {% set total = users|length + posts|length %} Found
+    <strong>{{ total }}</strong> result{% if total != 1 %}s{% endif %} for "{{
+    query }}"
+  </div>
 
-{% if users %}
-<h2 class="section-title">People</h2>
-<div class="users-list">
-  {% for user in users %}
-  <div class="user-item">
-    <div class="user-avatar">
-      {{ user.full_name[0] if user.full_name else '?' }}
+  {% if users %}
+  <h2 class="section-title">People</h2>
+  <div class="users-list">
+    {% for user in users %}
+    <div class="user-item">
+      <div class="user-avatar">
+        {{ user.full_name[0] if user.full_name else '?' }}
+      </div>
+      <div class="user-details">
+        <h3>{{ user.full_name }}</h3>
+        <p class="user-email">{{ user.email }}</p>
+        {% if user.bio %}
+        <p class="user-bio">
+          {{ user.bio[:100] }}{% if user.bio|length > 100 %}...{% endif %}
+        </p>
+        {% endif %}
+      </div>
     </div>
-    <div class="user-details">
-      <h3>{{ user.full_name }}</h3>
-      <p class="user-email">{{ user.email }}</p>
-      {% if user.bio %}
-      <p class="user-bio">
-        {{ user.bio[:100] }}{% if user.bio|length > 100 %}...{% endif %}
-      </p>
+    {% endfor %}
+  </div>
+  {% endif %} {% if posts %}
+  <h2 class="section-title">Posts</h2>
+  <div class="posts-list">
+    {% for post in posts %}
+    <div
+      class="post-item post-clickable"
+      data-post-id="{{ post.id }}"
+      data-post-title="{{ post.title }}"
+      data-post-desc="{{ post.description or '' }}"
+      data-post-image="{{ post.image_path or '' }}"
+      data-post-author="{{ post.full_name }}"
+      data-post-type="{{ post.post_type.replace('_', ' ').title() }}"
+    >
+      {% if post.image_path %}
+      <img
+        src="/static/{{ post.image_path }}"
+        alt="{{ post.title }}"
+        class="post-image"
+      />
+      {% else %}
+      <div class="post-image placeholder-img">No Image</div>
       {% endif %}
+
+      <div class="post-body">
+        <span class="post-tag"
+          >{{ post.post_type.replace('_', ' ').title() }}</span
+        >
+        <h3 class="post-title">{{ post.title }}</h3>
+        <p class="post-desc">
+          {{ post.description[:140] }}{% if post.description|length > 140
+          %}...{% endif %}
+        </p>
+        <p class="post-author">By {{ post.full_name }}</p>
+
+        <form
+          action="/request_collab/{{ post.id }}"
+          method="post"
+          class="collab-form"
+        >
+          <button type="submit" class="collab-btn">Request Collab</button>
+        </form>
+      </div>
     </div>
+    {% endfor %}
   </div>
-  {% endfor %}
-</div>
-{% endif %} {% if posts %}
-<h2 class="section-title">Posts</h2>
-<div class="posts-list">
-  {% for post in posts %}
-  <div
-    class="post-item post-clickable"
-    data-post-id="{{ post.id }}"
-    data-post-title="{{ post.title }}"
-    data-post-desc="{{ post.description or '' }}"
-    data-post-image="{{ post.image_path or '' }}"
-    data-post-author="{{ post.full_name }}"
-    data-post-type="{{ post.post_type.replace('_', ' ').title() }}"
-  >
-    {% if post.image_path %}
-    <img
-      src="/static/{{ post.image_path }}"
-      alt="{{ post.title }}"
-      class="post-image"
-    />
-    {% else %}
-    <div class="post-image placeholder-img">No Image</div>
-    {% endif %}
-
-    <div class="post-body">
-      <span class="post-tag"
-        >{{ post.post_type.replace('_', ' ').title() }}</span
-      >
-      <h3 class="post-title">{{ post.title }}</h3>
-      <p class="post-desc">
-        {{ post.description[:140] }}{% if post.description|length > 140 %}...{%
-        endif %}
-      </p>
-      <p class="post-author">By {{ post.full_name }}</p>
-
-      <form
-        action="/request_collab/{{ post.id }}"
-        method="post"
-        class="collab-form"
-      >
-        <button type="submit" class="collab-btn">Request Collab</button>
-      </form>
-    </div>
+  {% endif %} {% if users|length == 0 and posts|length == 0 %}
+  <div class="no-results">
+    <h2>No results found</h2>
+    <p>Try a different keyword or check your spelling.</p>
   </div>
-  {% endfor %}
-</div>
-{% endif %} {% if users|length == 0 and posts|length == 0 %}
-<div class="no-results">
-  <h2>No results found</h2>
-  <p>Try a different keyword or check your spelling.</p>
-</div>
-{% endif %} {% endif %}
+  {% endif %} {% endif %}
 
-<script>
-  document.querySelectorAll(".collab-btn").forEach(function (btn) {
-    btn.addEventListener("click", async function (e) {
-      e.preventDefault();
-      e.stopPropagation();
+  <script>
+    document.querySelectorAll(".collab-btn").forEach(function (btn) {
+      btn.addEventListener("click", async function (e) {
+        e.preventDefault();
+        e.stopPropagation();
 
-      var form = this.closest("form");
-      var originalText = this.textContent;
+        var form = this.closest("form");
+        var originalText = this.textContent;
 
-      this.disabled = true;
-      this.textContent = "Sending...";
+        this.disabled = true;
+        this.textContent = "Sending...";
 
-      try {
-        var res = await fetch(form.action, { method: "POST" });
-        var data = await res.json();
+        try {
+          var res = await fetch(form.action, { method: "POST" });
+          var data = await res.json();
 
-        if (data.success) {
-          this.textContent = "Requested!";
-          this.style.background = "#ccc";
-          this.style.cursor = "default";
-        } else {
-          alert(data.error || "Something went wrong");
+          if (data.success) {
+            this.textContent = "Requested!";
+            this.style.background = "#ccc";
+            this.style.cursor = "default";
+          } else {
+            alert(data.error || "Something went wrong");
+            this.disabled = false;
+            this.textContent = originalText;
+          }
+        } catch (err) {
+          alert("Network error - please try again");
           this.disabled = false;
           this.textContent = originalText;
         }
-      } catch (err) {
-        alert("Network error - please try again");
-        this.disabled = false;
-        this.textContent = originalText;
-      }
+      });
     });
-  });</script>
+  </script>
+</div>
 
 {% endblock %}
