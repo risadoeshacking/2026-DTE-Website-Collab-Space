@@ -67,6 +67,21 @@ head %}
   .edit-btn:hover {
     background: #007bb8;
   }
+  .skills-wrap {
+    margin: 15px 0 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+  .skill-tag {
+    background: #0095dd;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: bold;
+  }
   .section-title {
     font-size: 20px;
     color: #fff;
@@ -156,13 +171,25 @@ head %}
     <div class="profile-bio">{{ user.bio }}</div>
     {% else %}
     <div class="profile-bio">No bio yet.</div>
-    {% endif %}
-
+    {% endif %} {% if skills %}
+    <div class="skills-wrap">
+      {% for skill in skills %}
+      <span class="skill-tag">{{ skill }}</span>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="skills-wrap" style="color: #777; font-size: 14px">
+      No skills added yet.
+    </div>
+    {% endif %} {% if is_me %}
     <a href="/profile/edit" class="edit-btn">Edit Profile</a>
+    {% endif %}
   </div>
 
   <!-- User's Posts -->
-  <h2 class="section-title">My Posts</h2>
+  <h2 class="section-title">
+    {% if is_me %}My Posts{% else %}{{ user.full_name }}'s Posts{% endif %}
+  </h2>
 
   {% if posts %} {% for post in posts %}
   <div class="post-card">

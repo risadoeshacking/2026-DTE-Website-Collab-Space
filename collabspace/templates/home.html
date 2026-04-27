@@ -65,7 +65,13 @@
     <img src="/static/{{ p.image_path }}" />
     {% endif %}
     <div class="title">{{ p.title }}</div>
-    <div class="author">{{ p.full_name }}</div>
+    <a
+      href="/user/{{ p.user_id }}"
+      class="author"
+      onclick="event.stopPropagation();"
+      style="text-decoration: none; color: #aaa"
+      >{{ p.full_name }}</a
+    >
     <form
       class="collab-hide"
       action="/request_collab/{{ p.id }}"
