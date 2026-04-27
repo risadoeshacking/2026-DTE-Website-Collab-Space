@@ -1,0 +1,117 @@
+{% extends "layout.html" %} {% block title %}Edit Profile{% endblock %} {% block
+head %}
+<style>
+  .edit-wrap {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  .edit-card {
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 12px;
+    padding: 30px;
+  }
+  .edit-card h2 {
+    color: #fff;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .form-group {
+    margin-bottom: 20px;
+  }
+  .form-group label {
+    display: block;
+    color: #ccc;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #555;
+    border-radius: 8px;
+    background: #333;
+    color: #fff;
+    font-size: 14px;
+  }
+  .form-group input:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: #0095dd;
+  }
+  .form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+  }
+  .save-btn {
+    background: #0095dd;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  .save-btn:hover {
+    background: #007bb8;
+  }
+  .cancel-btn {
+    background: #444;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+  }
+  .cancel-btn:hover {
+    background: #555;
+  }
+  .current-pic {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #0095dd;
+    display: block;
+    margin: 0 auto 15px;
+  }
+</style>
+{% endblock %} {% block body %}
+<div class="edit-wrap">
+  <div class="edit-card">
+    <h2>Edit Profile</h2>
+
+    <form method="POST" action="/profile/edit">
+      <div class="form-group">
+        <label for="full_name">Full Name</label>
+        <input
+          type="text"
+          id="full_name"
+          name="full_name"
+          value="{{ user.full_name or '' }}"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="bio">Bio</label>
+        <textarea id="bio" name="bio" placeholder="Tell us about yourself...">
+{{ user.bio or '' }}</textarea
+        >
+      </div>
+
+      <button type="submit" class="save-btn">Save Changes</button>
+      <a href="/profile" class="cancel-btn">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

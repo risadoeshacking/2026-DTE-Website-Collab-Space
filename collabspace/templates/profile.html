@@ -1,0 +1,179 @@
+{% extends "layout.html" %} {% block title %}My Profile{% endblock %} {% block
+head %}
+<style>
+  .profile-wrap {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  .profile-card {
+    background: #222;
+    border: 1px solid #666;
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.05);
+  }
+  .profile-pic {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #0095dd;
+    margin-bottom: 15px;
+  }
+  .default-avatar {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: #333;
+    color: #aaa;
+    font-size: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    border: 3px solid #0095dd;
+  }
+  .profile-name {
+    font-size: 28px;
+    color: #fff;
+    margin-bottom: 5px;
+  }
+  .profile-username {
+    font-size: 16px;
+    color: #aaa;
+    margin-bottom: 15px;
+  }
+  .profile-bio {
+    font-size: 15px;
+    color: #ccc;
+    line-height: 1.5;
+    margin-bottom: 20px;
+    white-space: pre-wrap;
+  }
+  .edit-btn {
+    background: #0095dd;
+    color: white;
+    padding: 10px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .edit-btn:hover {
+    background: #007bb8;
+  }
+  .section-title {
+    font-size: 20px;
+    color: #fff;
+    margin-bottom: 15px;
+  }
+  .post-card {
+    background: #222;
+    border: 1px solid #666;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.05);
+  }
+  .post-card img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+  .post-title {
+    color: white;
+    font-size: 18px;
+    margin-bottom: 5px;
+  }
+  .post-desc {
+    color: #aaa;
+    font-size: 14px;
+  }
+  .no-posts {
+    color: #777;
+    text-align: center;
+    padding: 30px;
+  }
+
+  /* Simple mobile responsiveness */
+  @media (max-width: 600px) {
+    .profile-wrap {
+      padding: 10px;
+    }
+    .profile-card {
+      padding: 20px;
+    }
+    .profile-pic,
+    .default-avatar {
+      width: 100px;
+      height: 100px;
+    }
+    .default-avatar {
+      font-size: 36px;
+    }
+    .profile-name {
+      font-size: 22px;
+    }
+    .profile-username {
+      font-size: 14px;
+    }
+    .profile-bio {
+      font-size: 13px;
+    }
+    .post-card {
+      padding: 15px;
+    }
+    .post-title {
+      font-size: 16px;
+    }
+    .post-desc {
+      font-size: 13px;
+    }
+    .section-title {
+      font-size: 18px;
+    }
+  }
+</style>
+{% endblock %} {% block body %}
+<div class="profile-wrap">
+  <!-- Profile Info Card -->
+  <div class="profile-card">
+    <div class="default-avatar">
+      {{ user.full_name[0] if user.full_name else '?' }}
+    </div>
+
+    <div class="profile-name">{{ user.full_name or 'No Name' }}</div>
+    <div class="profile-username">@{{ user.username or 'username' }}</div>
+
+    {% if user.bio %}
+    <div class="profile-bio">{{ user.bio }}</div>
+    {% else %}
+    <div class="profile-bio">No bio yet.</div>
+    {% endif %}
+
+    <a href="/profile/edit" class="edit-btn">Edit Profile</a>
+  </div>
+
+  <!-- User's Posts -->
+  <h2 class="section-title">My Posts</h2>
+
+  {% if posts %} {% for post in posts %}
+  <div class="post-card">
+    {% if post.image_path %}
+    <img src="/static/{{ post.image_path }}" alt="Post image" />
+    {% endif %}
+    <div class="post-title">{{ post.title }}</div>
+    <div class="post-desc">{{ post.description }}</div>
+  </div>
+  {% endfor %} {% else %}
+  <div class="no-posts">You haven't posted anything yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

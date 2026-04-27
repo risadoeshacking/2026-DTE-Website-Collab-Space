@@ -1,5 +1,6 @@
 PRAGMA foreign_keys = ON;
 
+-- USERS
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   full_name TEXT NOT NULL,
@@ -13,10 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-INSERT OR IGNORE INTO skills (name) VALUES
-('Python'), ('JavaScript'), ('HTML/CSS'), ('React'), ('Node.js'),
-('Java'), ('C++'), ('SQL'), ('Git'), ('Docker'), ('UI/UX'), ('Project Management');
-
+-- POSTS
 CREATE TABLE IF NOT EXISTS posts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
@@ -28,6 +26,7 @@ CREATE TABLE IF NOT EXISTS posts (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- COMMENTS
 CREATE TABLE IF NOT EXISTS comments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   post_id INTEGER NOT NULL,
@@ -38,6 +37,7 @@ CREATE TABLE IF NOT EXISTS comments (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- LIKES (many-to-many users <-> posts)
 CREATE TABLE IF NOT EXISTS likes (
   user_id INTEGER NOT NULL,
   post_id INTEGER NOT NULL,
@@ -47,11 +47,13 @@ CREATE TABLE IF NOT EXISTS likes (
   FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
 );
 
+-- SKILLS
 CREATE TABLE IF NOT EXISTS skills (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL UNIQUE
 );
 
+-- USER_SKILLS (many-to-many users <-> skills)
 CREATE TABLE IF NOT EXISTS user_skills (
   user_id INTEGER NOT NULL,
   skill_id INTEGER NOT NULL,
@@ -61,6 +63,7 @@ CREATE TABLE IF NOT EXISTS user_skills (
   FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE
 );
 
+-- POST_SKILLS (many-to-many posts <-> skills)
 CREATE TABLE IF NOT EXISTS post_skills (
   post_id INTEGER NOT NULL,
   skill_id INTEGER NOT NULL,
@@ -69,6 +72,7 @@ CREATE TABLE IF NOT EXISTS post_skills (
   FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE
 );
 
+-- COLLAB REQUESTS
 CREATE TABLE IF NOT EXISTS collab_requests (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   post_id INTEGER NOT NULL,
@@ -84,6 +88,7 @@ CREATE TABLE IF NOT EXISTS collab_requests (
   CHECK (from_user_id != to_user_id)
 );
 
+-- RATINGS (1 rating per collab, score 1-5)
 CREATE TABLE IF NOT EXISTS ratings (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   collab_id INTEGER NOT NULL UNIQUE,
@@ -98,18 +103,20 @@ CREATE TABLE IF NOT EXISTS ratings (
   CHECK (rater_id != rated_user_id)
 );
 
+-- NOTIFICATIONS - simple table for alerts
 CREATE TABLE IF NOT EXISTS notifications (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
-  type TEXT NOT NULL,
   message TEXT NOT NULL,
-  is_read INTEGER NOT NULL DEFAULT 0,
+  is_read INTEGER NOT NULL DEFAULT 0,  -- 0 = unread, 1 = read
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Helpful indexes (speed)
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, is_read, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_posts_created_at ON posts(created_at);
 CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id);
 CREATE INDEX IF NOT EXISTS idx_comments_post_id ON comments(post_id);
 CREATE INDEX IF NOT EXISTS idx_collab_post_id ON collab_requests(post_id);
+

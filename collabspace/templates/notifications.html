@@ -1,12 +1,34 @@
-<!DOCTYPE html>
 {% extends "layout.html" %} {% block title %}Notifications - Collab Space{%
 endblock %} {% block body %}
 <div style="max-width: 600px; margin: 0 auto; padding: 20px">
+  <div
+    style="
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    "
+  >
+    <h1 style="color: white; margin: 0">Notifications</h1>
+    <button
+      onclick="markAllRead()"
+      style="
+        background: #6366f1;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+      "
+    >
+      Mark all read
+    </button>
+  </div>
 
   {% if pending_requests %}
-  <h1 style="text-align: center; margin-bottom: 30px; color: white">
-    🔔 Pending Collab Requests ({{ pending_requests|length }})
-  </h1>
+  <h2 style="color: #00ff00; margin: 20px 0 15px 0">
+    Pending Requests ({{ pending_requests|length }})
+  </h2>
   {% for req in pending_requests %}
   <div class="request-card" data-req-id="{{ req.id }}">
     <div>
@@ -19,43 +41,42 @@ endblock %} {% block body %}
     <div style="display: flex; gap: 10px">
       <button
         onclick="handleRequest('{{ req.id }}', 'approve')"
-        style="
-          background: #00ff00;
-          color: black;
-          border: none;
-          padding: 8px 16px;
-          border-radius: 6px;
-          cursor: pointer;
-        "
+        class="btn-approve"
       >
-        ✅ Approve
+        Approve
       </button>
       <button
         onclick="handleRequest('{{ req.id }}', 'decline')"
-        style="
-          background: #ff4444;
-          color: white;
-          border: none;
-          padding: 8px 16px;
-          border-radius: 6px;
-          cursor: pointer;
-        "
+        class="btn-decline"
       >
-        ❌ Decline
+        Decline
       </button>
     </div>
   </div>
-  {% endfor %} {% endif %}
-
-
-  {% if unread %}
-  <h2 style="color: #00ff00; margin: 30px 0 15px 0">
-    Other Notifications ({{ unread|length }})
+  {% endfor %} {% endif %} {% if unread %}
+  <h2 style="color: #6366f1; margin: 30px 0 15px 0">
+    Unread ({{ unread|length }})
   </h2>
   {% for notif in unread %}
-  <div class="notification-card unread">
-    <strong>{{ notif.type.replace('_', ' ').title() }}:</strong> {{
-    notif.message }} <br /><small>{{ notif.created_at[:16] }}</small>
+  <div class="notification-card unread" id="notif-{{ notif.id }}">
+    <div>
+      {{ notif.message }}
+      <br /><small style="opacity: 0.7">{{ notif.created_at[:16] }}</small>
+    </div>
+    <button
+      onclick="markRead({{ notif.id }})"
+      style="
+        background: #444;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+      "
+    >
+      Mark read
+    </button>
   </div>
   {% endfor %} {% endif %} {% if read_notifs %}
   <h2 style="color: #888; margin: 30px 0 15px 0">
@@ -63,14 +84,14 @@ endblock %} {% block body %}
   </h2>
   {% for notif in read_notifs %}
   <div class="notification-card read">
-    <strong>{{ notif.type.replace('_', ' ').title() }}:</strong> {{
-    notif.message }}
+    {{ notif.message }}
+    <br /><small style="opacity: 0.7">{{ notif.created_at[:16] }}</small>
   </div>
   {% endfor %} {% endif %} {% if not pending_requests and not unread and not
   read_notifs %}
   <div style="text-align: center; padding: 50px; color: #888">
-    <h2>No notifications</h2>
-    <p>Collab requests will appear here!</p>
+    <h2>No notifications yet</h2>
+    <p>Collab requests and updates will appear here!</p>
   </div>
   {% endif %}
 </div>
@@ -87,6 +108,7 @@ endblock %} {% block body %}
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
   }
   .request-card {
     border-left: 4px solid #00ff00;
@@ -95,26 +117,107 @@ endblock %} {% block body %}
     border-left: 4px solid #6366f1;
   }
   .notification-card.read {
-    opacity: 0.7;
+    opacity: 0.6;
+    border-left: 4px solid #444;
+  }
+  .btn-approve {
+    background: #00ff00;
+    color: black;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  .btn-decline {
+    background: #ff4444;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
   }
 </style>
 
 <script>
   function handleRequest(reqId, action) {
-    const url = `/${action}_request/${reqId}`;
-    fetch(url, { method: "POST" })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.success) {
+    const url = "/" + action + "_request/" + reqId;
 
-          const card = document.querySelector(`[data-req-id="${reqId}"]`);
+    fetch(url, { method: "POST" })
+      .then(function (response) {
+        return response.json().then(function (data) {
+          if (!response.ok) {
+            throw new Error(data.error || "Server error: " + response.status);
+          }
+          return data;
+        });
+      })
+      .then(function (data) {
+        if (data.success) {
+          const card = document.querySelector('[data-req-id="' + reqId + '"]');
           card.style.transition = "opacity 0.3s";
           card.style.opacity = "0";
-          setTimeout(() => card.remove(), 300);
+          setTimeout(function () {
+            card.remove();
+            if (!document.querySelector(".request-card")) {
+              window.location.reload();
+            }
+          }, 300);
         } else {
-          alert("Error: " + (data.error || "Something wrong"));
+          alert("Error: " + (data.error || "Something went wrong"));
         }
       })
-      .catch(() => alert("Network error"));
-  }</script>
+      .catch(function (err) {
+        console.error("handleRequest error:", err);
+        alert("Failed: " + err.message);
+      });
+  }
+  function markRead(notifId) {
+    fetch("/mark_read/" + notifId, { method: "POST" })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        if (data.success) {
+          const card = document.getElementById("notif-" + notifId);
+          if (card) {
+            card.classList.remove("unread");
+            card.classList.add("read");
+
+            const btn = card.querySelector("button");
+            if (btn) btn.remove();
+          }
+
+          if (window.updateNotifBadge) {
+            window.updateNotifBadge();
+          }
+        } else {
+          alert("Error: " + (data.error || "Could not mark read"));
+        }
+      })
+      .catch(function (err) {
+        console.error("markRead error:", err);
+        alert("Network error - could not mark read");
+      });
+  }
+
+  function markAllRead() {
+    fetch("/mark_all_read", { method: "POST" })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        if (data.success) {
+          window.location.reload();
+        } else {
+          alert("Error: " + (data.error || "Could not mark all read"));
+        }
+      })
+      .catch(function (err) {
+        console.error("markAllRead error:", err);
+        alert("Network error - could not mark all read");
+      });
+  }
+</script>
 {% endblock %}
