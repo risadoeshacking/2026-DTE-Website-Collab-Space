@@ -13,7 +13,6 @@ DATABASE_FILE = "collab_space.db"
 
 @contextmanager
 def get_db():
-
     conn = sqlite3.connect(DATABASE_FILE)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON;")
@@ -23,7 +22,6 @@ def get_db():
         conn.close()
 
 def setup_db():
-
     try:
         with open('schema.sql', 'r') as f:
             sql_script = f.read()
@@ -161,7 +159,6 @@ def new_post():
 
 @app.route("/request_collab/<int:post_id>", methods=["POST"])
 def request_collab(post_id):
-
     if "user_id" not in session:
         return jsonify({'error': 'Login required'}), 401
 
@@ -196,15 +193,12 @@ def request_collab(post_id):
         return jsonify({'error': str(e)}), 500
 
 def create_notification(db, user_id, message):
-    """Insert a notification using the EXISTING db connection.
-    This prevents nested connections which caused network errors."""
     db.execute(
         "INSERT INTO notifications (user_id, message) VALUES (?, ?)",
         (user_id, message))
 
 @app.route("/approve_request/<int:request_id>", methods=["POST"])
 def approve_request(request_id):
-
     if "user_id" not in session:
         return jsonify({"error": "Please login first!"}), 401
 
@@ -237,7 +231,6 @@ def approve_request(request_id):
 
 @app.route("/decline_request/<int:request_id>", methods=["POST"])
 def decline_request(request_id):
-
     if "user_id" not in session:
         return jsonify({"error": "Please login first!"}), 401
 
@@ -270,7 +263,6 @@ def decline_request(request_id):
 
 @app.route("/api/notif_count")
 def api_notif_count():
-
     if "user_id" not in session:
         return jsonify({"count": 0})
 
@@ -287,7 +279,6 @@ def api_notif_count():
 
 @app.route("/notifications")
 def notifications():
-
     if "user_id" not in session:
         return redirect(url_for("login"))
 
@@ -295,7 +286,6 @@ def notifications():
 
     try:
         with get_db() as db:
-
             pending_requests = db.execute("""
                 SELECT cr.id, cr.created_at, p.title as post_title, u.full_name as from_name
                 FROM collab_requests cr
@@ -304,7 +294,6 @@ def notifications():
                 WHERE cr.to_user_id = ? AND cr.status = 'pending'
                 ORDER BY cr.created_at DESC
             """, (user_id,)).fetchall()
-
             unread = db.execute("""
                 SELECT * FROM notifications
                 WHERE user_id = ? AND is_read = 0
@@ -329,7 +318,6 @@ def notifications():
 
 @app.route("/mark_read/<int:notif_id>", methods=["POST"])
 def mark_read(notif_id):
-
     if "user_id" not in session:
         return jsonify({"error": "Login required"}), 401
 
@@ -347,7 +335,6 @@ def mark_read(notif_id):
 
 @app.route("/mark_all_read", methods=["POST"])
 def mark_all_read():
-
     if "user_id" not in session:
         return jsonify({"error": "Login required"}), 401
 
@@ -363,9 +350,15 @@ def mark_all_read():
         print("ERROR in mark_all_read:", e)
         return jsonify({"error": str(e)}), 500
 
+def get_user_skills(db, user_id):
+    rows = db.execute(
+        "SELECT s.name FROM skills s JOIN user_skills us ON s.id = us.skill_id WHERE us.user_id = ? ORDER BY s.name",
+        (user_id,)
+    ).fetchall()
+    return [r["name"] for r in rows]
+
 @app.route("/profile")
 def profile():
-
     if "user_id" not in session:
         return redirect(url_for("login"))
 
@@ -377,12 +370,28 @@ def profile():
         posts = db.execute(
             "SELECT * FROM posts WHERE user_id=? ORDER BY created_at DESC",
             (user_id,)).fetchall()
+        skills = get_user_skills(db, user_id)
 
-    return render_template("profile.html", user=user, posts=posts)
+    return render_template("profile.html", user=user, posts=posts, skills=skills, is_me=True)
+
+@app.route("/user/<int:user_id>")
+def user_profile(user_id):
+    with get_db() as db:
+        user = db.execute(
+            "SELECT * FROM users WHERE id=?", (user_id,)).fetchone()
+        if not user:
+            flash("User not found", "error")
+            return redirect(url_for("feed"))
+
+        posts = db.execute(
+            "SELECT * FROM posts WHERE user_id=? ORDER BY created_at DESC",
+            (user_id,)).fetchall()
+        skills = get_user_skills(db, user_id)
+
+    return render_template("profile.html", user=user, posts=posts, skills=skills, is_me=False)
 
 @app.route("/profile/edit", methods=["GET", "POST"])
 def edit_profile():
-
     if "user_id" not in session:
         return redirect(url_for("login"))
 
@@ -391,13 +400,27 @@ def edit_profile():
     if request.method == "POST":
         new_name = request.form.get("full_name", "").strip()
         new_bio = request.form.get("bio", "").strip()
+        skills_raw = request.form.get("skills", "")
 
         with get_db() as db:
             db.execute(
                 "UPDATE users SET full_name=?, bio=? WHERE id=?",
                 (new_name, new_bio, user_id))
-            db.commit()
 
+            skill_names = [s.strip().title()
+                           for s in skills_raw.split(",") if s.strip()]
+            db.execute("DELETE FROM user_skills WHERE user_id=?", (user_id,))
+
+            for name in skill_names:
+                db.execute(
+                    "INSERT OR IGNORE INTO skills (name) VALUES (?)", (name,))
+                skill_row = db.execute(
+                    "SELECT id FROM skills WHERE name=?", (name,)).fetchone()
+                if skill_row:
+                    db.execute("INSERT INTO user_skills (user_id, skill_id, level) VALUES (?, ?, 1)",
+                               (user_id, skill_row["id"]))
+
+            db.commit()
             session["name"] = new_name
 
         flash("Profile updated!", "success")
@@ -406,8 +429,10 @@ def edit_profile():
     with get_db() as db:
         user = db.execute(
             "SELECT * FROM users WHERE id=?", (user_id,)).fetchone()
+        skills = get_user_skills(db, user_id)
 
-    return render_template("edit_profile.html", user=user)
+    skills_str = ", ".join(skills)
+    return render_template("edit_profile.html", user=user, skills_str=skills_str)
 
 @app.route("/search")
 def search():

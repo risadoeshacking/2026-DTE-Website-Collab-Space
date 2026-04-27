@@ -39,7 +39,11 @@
   <h2 class="section-title">People</h2>
   <div class="users-list">
     {% for user in users %}
-    <div class="user-item">
+    <a
+      href="/user/{{ user.id }}"
+      class="user-item"
+      style="text-decoration: none; color: inherit"
+    >
       <div class="user-avatar">
         {{ user.full_name[0] if user.full_name else '?' }}
       </div>
@@ -52,7 +56,7 @@
         </p>
         {% endif %}
       </div>
-    </div>
+    </a>
     {% endfor %}
   </div>
   {% endif %} {% if posts %}
