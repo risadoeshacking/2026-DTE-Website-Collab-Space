@@ -18,6 +18,8 @@ body::before {
   background: linear-gradient(120deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.4));
   top: 0;
   left: 0;
+  pointer-events: none;
+  z-index: -1;
 }
 
 .split-container {
@@ -113,6 +115,7 @@ body::before {
   text-decoration: underline;
 }
 
+/* Notification styles - matching glass theme */
 .notification-card {
   backdrop-filter: blur(10px);
   background: rgba(255, 255, 255, 0.1);
@@ -139,6 +142,7 @@ body::before {
   margin-right: 10px;
 }
 
+/* Simple student-style profile - minimal clean design */
 .profile-container {
   max-width: 800px;
   margin: 0 auto;
@@ -429,6 +433,7 @@ body::before {
   }
 }
 
+/* Post Popup Modal - Professional Design */
 .post-modal {
   display: none;
   position: fixed;
@@ -576,6 +581,7 @@ body::before {
   display: none !important;
 }
 
+/* Responsive Modal */
 @media (max-width: 768px) {
   .modal-content {
     margin: 20px;
@@ -592,6 +598,7 @@ body::before {
   }
 }
 
+/* Responsive */
 @media (max-width: 768px) {
   .profile-header {
     padding: 2rem 1.5rem;
