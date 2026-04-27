@@ -143,10 +143,23 @@
         <img src="{{ url_for('static', filename='icons/add.svg') }}" alt="" />
         <div class="tooltip">New Post</div>
       </a>
+      <a href="/profile">
+        <img
+          src="{{ url_for('static', filename='icons/profile.svg') }}"
+          alt=""
+        />
+        <div class="tooltip">Profile</div>
+      </a>
+      <a href="/logout" style="margin-top: auto">
+        <img
+          src="{{ url_for('static', filename='icons/logout.svg') }}"
+          alt=""
+        />
+        <div class="tooltip">Logout</div>
+      </a>
     </div>
     <div class="main">{% block body %}{% endblock %}</div>
     {% block scripts %}{% endblock %}
-
 
     <div id="postModal" class="post-modal">
       <div class="modal-backdrop"></div>
@@ -159,15 +172,12 @@
         <h2 id="modal-title"></h2>
         <p id="modal-desc" class="modal-desc"></p>
         <div class="modal-author" id="modal-author"></div>
-        <form id="modal-form" method="post" style="display: none">
-
-        </form>
+        <form id="modal-form" method="post" style="display: none"></form>
         <button id="modal-collab" class="collab-btn">Request Collab</button>
       </div>
     </div>
 
     <script>
-
       function updateNotifBadge() {
         fetch("/api/notif_count")
           .then((r) => r.json())
@@ -246,7 +256,7 @@
             const data = await res.json();
 
             if (data.success) {
-              button.textContent = "✅ Requested!";
+              button.textContent = "Requested!";
               button.style.background = "#ccc";
               button.style.cursor = "default";
               if (window.updateNotifBadge) window.updateNotifBadge();
@@ -267,7 +277,7 @@
             return false;
           } finally {
             button.disabled = false;
-            if (!button.textContent.includes("✅")) {
+            if (!button.textContent.includes("Done")) {
               button.textContent = originalText;
             }
           }
