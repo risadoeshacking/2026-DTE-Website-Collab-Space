@@ -1,20 +1,30 @@
 <!-- ========================= 
-  Login Page for Collab Space
+  Search Page for Collab Space
   File: search.html
   Author: Risandu Salman
   Date: April 17 
 =========================   -->
 
-{% extends "layout.html" %} {% block title %}Search - CollabSpace{% endblock %}
-{% block head %}
+{% extends "layout.html" %}
+
+<!-- page title shown in browser tab -->
+{% block title %}Search - CollabSpace{% endblock %} {% block head %}
+
+<!-- linking external CSS for search page -->
 <link rel="stylesheet" href="{{ url_for('static', filename='search.css') }}" />
+
 {% endblock %} {% block body %}
 
+<!-- main search page container -->
 <div class="search-container">
+  <!-- search header section -->
   <div class="search-box">
+    <!-- page heading -->
     <h1 class="search-heading">Find collaborators & projects</h1>
 
+    <!-- search form (GET request so query appears in URL) -->
     <form method="GET" action="/search" class="search-form">
+      <!-- search input field -->
       <input
         type="text"
         name="q"
@@ -24,39 +34,64 @@
         autofocus
         aria-label="Search"
       />
+
+      <!-- submit search button -->
       <button type="submit" class="search-btn">Search</button>
     </form>
   </div>
 
+  <!-- ===================== NO SEARCH YET STATE ===================== -->
   {% if not query %}
+
+  <!-- message shown before user searches -->
   <div class="welcome-box">
     <p>
       Type a name or keyword above and press <strong>Enter</strong> to search.
     </p>
   </div>
-  {% endif %} {% if query %}
 
+  {% endif %}
+
+  <!-- ===================== SEARCH RESULTS ===================== -->
+  {% if query %}
+
+  <!-- total results count -->
   <div class="result-count">
     {% set total = users|length + posts|length %} Found
     <strong>{{ total }}</strong> result{% if total != 1 %}s{% endif %} for "{{
     query }}"
   </div>
 
+  <!-- ===================== USERS SECTION ===================== -->
   {% if users %}
+
+  <!-- section title for users -->
   <h2 class="section-title">People</h2>
+
+  <!-- list of users -->
   <div class="users-list">
     {% for user in users %}
+
+    <!-- clickable user card -->
     <a
       href="/user/{{ user.id }}"
       class="user-item"
       style="text-decoration: none; color: inherit"
     >
+      <!-- user avatar (first letter fallback) -->
       <div class="user-avatar">
         {{ user.full_name[0] if user.full_name else '?' }}
       </div>
+
+      <!-- user details -->
       <div class="user-details">
+        <!-- full name -->
         <h3>{{ user.full_name }}</h3>
+
+        <!-- email -->
         <p class="user-email">{{ user.email }}</p>
+
+        <!-- bio preview (only if exists) -->
         {% if user.bio %}
         <p class="user-bio">
           {{ user.bio[:100] }}{% if user.bio|length > 100 %}...{% endif %}
@@ -64,12 +99,22 @@
         {% endif %}
       </div>
     </a>
+
     {% endfor %}
   </div>
-  {% endif %} {% if posts %}
+  {% endif %}
+
+  <!-- ===================== POSTS SECTION ===================== -->
+  {% if posts %}
+
+  <!-- section title for posts -->
   <h2 class="section-title">Posts</h2>
+
+  <!-- list of posts -->
   <div class="posts-list">
     {% for post in posts %}
+
+    <!-- clickable post card -->
     <div
       class="post-item post-clickable"
       data-post-id="{{ post.id }}"
@@ -79,6 +124,7 @@
       data-post-author="{{ post.full_name }}"
       data-post-type="{{ post.post_type.replace('_', ' ').title() }}"
     >
+      <!-- show image if available -->
       {% if post.image_path %}
       <img
         src="/static/{{ post.image_path }}"
@@ -86,47 +132,69 @@
         class="post-image"
       />
       {% else %}
+
+      <!-- fallback placeholder if no image -->
       <div class="post-image placeholder-img">No Image</div>
       {% endif %}
 
+      <!-- post content -->
       <div class="post-body">
-        <span class="post-tag"
-          >{{ post.post_type.replace('_', ' ').title() }}</span
-        >
+        <!-- post type tag -->
+        <span class="post-tag">
+          {{ post.post_type.replace('_', ' ').title() }}
+        </span>
+
+        <!-- post title -->
         <h3 class="post-title">{{ post.title }}</h3>
+
+        <!-- post description preview -->
         <p class="post-desc">
           {{ post.description[:140] }}{% if post.description|length > 140
           %}...{% endif %}
         </p>
+
+        <!-- author name -->
         <p class="post-author">By {{ post.full_name }}</p>
 
+        <!-- collab request form -->
         <form
           action="/request_collab/{{ post.id }}"
           method="post"
           class="collab-form"
         >
+          <!-- collab button -->
           <button type="submit" class="collab-btn">Request Collab</button>
         </form>
       </div>
     </div>
+
     {% endfor %}
   </div>
-  {% endif %} {% if users|length == 0 and posts|length == 0 %}
+  {% endif %}
+
+  <!-- ===================== NO RESULTS STATE ===================== -->
+  {% if users|length == 0 and posts|length == 0 %}
+
+  <!-- shown when nothing matches search -->
   <div class="no-results">
     <h2>No results found</h2>
     <p>Try a different keyword or check your spelling.</p>
   </div>
+
   {% endif %} {% endif %}
 
+  <!-- ===================== COLLAB BUTTON SCRIPT ===================== -->
   <script>
+    // attach click events to all collab buttons
     document.querySelectorAll(".collab-btn").forEach(function (btn) {
       btn.addEventListener("click", async function (e) {
         e.preventDefault();
-        e.stopPropagation();
+        e.stopPropagation(); // prevents triggering parent click events
 
         var form = this.closest("form");
         var originalText = this.textContent;
 
+        // disable button while sending request
         this.disabled = true;
         this.textContent = "Sending...";
 
@@ -135,16 +203,21 @@
           var data = await res.json();
 
           if (data.success) {
+            // success state UI update
             this.textContent = "Requested!";
             this.style.background = "#ccc";
             this.style.cursor = "default";
           } else {
             alert(data.error || "Something went wrong");
+
+            // restore button state
             this.disabled = false;
             this.textContent = originalText;
           }
         } catch (err) {
+          // network error handling
           alert("Network error - please try again");
+
           this.disabled = false;
           this.textContent = originalText;
         }

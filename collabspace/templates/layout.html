@@ -1,18 +1,25 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <!-- page title (can be overridden by child pages) -->
     <title>{% block title %}Collab Space{% endblock %}</title>
+
+    <!-- linking external CSS file -->
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='styles.css') }}"
     />
+
     <style>
+      /* overall page styling */
       body {
         margin: 0;
         background: #000;
         color: #fff;
         font-family: Arial;
       }
+
+      /* left side navigation bar */
       .sidebar {
         position: fixed;
         left: 0;
@@ -26,6 +33,8 @@
         gap: 30px;
         align-items: center;
       }
+
+      /* sidebar links styling */
       .sidebar a {
         color: white;
         padding: 15px;
@@ -33,14 +42,20 @@
         position: relative;
         transition: 0.2s;
       }
+
+      /* hover effect for sidebar icons */
       .sidebar a:hover {
         background: rgba(255, 255, 255, 0.2);
       }
+
+      /* icon size inside sidebar */
       .sidebar img {
         width: 24px;
         height: 24px;
         filter: brightness(0) invert(1);
       }
+
+      /* tooltip text for sidebar icons */
       .tooltip {
         position: absolute;
         left: 80px;
@@ -57,9 +72,13 @@
         transition: 0.2s;
         z-index: 10;
       }
+
+      /* show tooltip on hover */
       .sidebar a:hover .tooltip {
         opacity: 1;
       }
+
+      /* logo at top center */
       .logo {
         position: fixed;
         top: 20px;
@@ -69,28 +88,38 @@
         z-index: 100;
         text-align: center;
       }
+
+      /* main content area beside sidebar */
       .main {
         margin-left: 70px;
         padding: 80px 20px 20px;
         min-height: 100vh;
       }
+
+      /* responsive design for smaller screens */
       @media (max-width: 768px) {
         .sidebar {
           width: 60px;
           gap: 25px;
         }
+
         .main {
           margin-left: 80px;
           padding-top: 100px;
         }
+
         .logo {
           width: 140px;
         }
       }
     </style>
+
+    <!-- extra head content from other pages -->
     {% block head %}{% endblock %}
   </head>
+
   <body>
+    <!-- show logo only on feed page -->
     {% if request.endpoint == 'feed' %}
     <img
       src="{{ url_for('static', filename='text_logo.png') }}"
@@ -98,11 +127,16 @@
       alt="Collab Space"
     />
     {% endif %}
+
+    <!-- sidebar navigation menu -->
     <div class="sidebar">
+      <!-- home page link -->
       <a href="/">
         <img src="{{ url_for('static', filename='icons/home.svg') }}" alt="" />
         <div class="tooltip">Home</div>
       </a>
+
+      <!-- search page link -->
       <a href="/search">
         <img
           src="{{ url_for('static', filename='icons/search.svg') }}"
@@ -110,11 +144,15 @@
         />
         <div class="tooltip">Search</div>
       </a>
+
+      <!-- notifications link -->
       <a href="/notifications" id="notif-link">
         <img
           src="{{ url_for('static', filename='icons/notification.svg') }}"
           alt=""
         />
+
+        <!-- notification badge -->
         <span
           id="notif-badge"
           class="notif-badge"
@@ -137,12 +175,17 @@
           "
           >0</span
         >
+
         <div class="tooltip">Notifications</div>
       </a>
+
+      <!-- create new post -->
       <a href="/new">
         <img src="{{ url_for('static', filename='icons/add.svg') }}" alt="" />
         <div class="tooltip">New Post</div>
       </a>
+
+      <!-- profile page -->
       <a href="/profile">
         <img
           src="{{ url_for('static', filename='icons/profile.svg') }}"
@@ -150,6 +193,8 @@
         />
         <div class="tooltip">Profile</div>
       </a>
+
+      <!-- logout button -->
       <a href="/logout" style="margin-top: auto">
         <img
           src="{{ url_for('static', filename='icons/logout.svg') }}"
@@ -158,38 +203,58 @@
         <div class="tooltip">Logout</div>
       </a>
     </div>
+
+    <!-- main content from other pages -->
     <div class="main">{% block body %}{% endblock %}</div>
+
+    <!-- extra scripts from child pages -->
     {% block scripts %}{% endblock %}
 
+    <!-- modal popup for viewing posts -->
     <div id="postModal" class="post-modal">
+      <!-- dark background overlay -->
       <div class="modal-backdrop"></div>
+
+      <!-- modal content box -->
       <div class="modal-content">
+        <!-- close button -->
         <button class="modal-close">&times;</button>
+
+        <!-- header section of modal -->
         <div class="modal-header">
           <img id="modal-img" src="" alt="Post Image" class="modal-img" />
           <div class="modal-type" id="modal-type"></div>
         </div>
+
+        <!-- post details -->
         <h2 id="modal-title"></h2>
         <p id="modal-desc" class="modal-desc"></p>
         <div class="modal-author" id="modal-author"></div>
+
+        <!-- hidden form for collab request -->
         <form id="modal-form" method="post" style="display: none"></form>
+
+        <!-- collab button -->
         <button id="modal-collab" class="collab-btn">Request Collab</button>
       </div>
     </div>
 
     <script>
+      // updates notification badge count from server
       function updateNotifBadge() {
         fetch("/api/notif_count")
           .then((r) => r.json())
           .then((data) => {
             const badge = document.getElementById("notif-badge");
             const count = data.count || 0;
+
             badge.textContent = count > 99 ? "99+" : count;
             badge.style.display = count > 0 ? "flex" : "none";
           })
           .catch(() => {});
       }
 
+      // start badge updates if notifications exist
       if (document.getElementById("notif-link")) {
         updateNotifBadge();
         setInterval(updateNotifBadge, 10000);
@@ -202,10 +267,13 @@
         const collabBtn = document.getElementById("modal-collab");
         const form = document.getElementById("modal-form");
 
+        // open modal when clicking a post
         document.querySelectorAll(".post-clickable").forEach((card) => {
           card.addEventListener("click", function (e) {
+            // ignore clicks on buttons/forms inside card
             if (e.target.closest("form, .collab-btn")) return;
 
+            // get post data from dataset
             const id = this.dataset.postId;
             const title = this.dataset.postTitle;
             const desc = this.dataset.postDesc;
@@ -213,6 +281,7 @@
             const author = this.dataset.postAuthor;
             const type = this.dataset.postType || "General";
 
+            // set modal content
             document.getElementById("modal-title").textContent = title;
             document.getElementById("modal-desc").textContent = desc;
             document.getElementById(
@@ -220,6 +289,7 @@
             ).textContent = `By ${author}`;
             document.getElementById("modal-type").textContent = type;
 
+            // show/hide image
             if (img) {
               document.getElementById("modal-img").src = `/static/${img}`;
               document.getElementById("modal-img").style.display = "block";
@@ -227,15 +297,20 @@
               document.getElementById("modal-img").style.display = "none";
             }
 
+            // set form action for collab request
             form.action = `/request_collab/${id}`;
-            collabBtn.onclick = function (e) {
+
+            // collab button action
+            collabBtn.onclick = function () {
               window.handleCollabRequest(form.action, collabBtn);
             };
 
+            // show modal
             modal.classList.add("show");
           });
         });
 
+        // close modal function
         function closeModal() {
           modal.classList.remove("show");
         }
@@ -243,6 +318,7 @@
         closeBtn.onclick = closeModal;
         backdrop.onclick = closeModal;
 
+        // handles collab request logic
         window.handleCollabRequest = async function (url, button) {
           const originalText = button.textContent;
           button.disabled = true;
@@ -250,15 +326,18 @@
 
           try {
             const res = await fetch(url, { method: "POST" });
+
             if (!res.ok) {
               throw new Error(`Server error: ${res.status}`);
             }
+
             const data = await res.json();
 
             if (data.success) {
               button.textContent = "Requested!";
               button.style.background = "#ccc";
               button.style.cursor = "default";
+
               if (window.updateNotifBadge) window.updateNotifBadge();
               return true;
             } else {
@@ -267,6 +346,7 @@
             }
           } catch (err) {
             console.error("Collab request error:", err);
+
             if (err.message.includes("401")) {
               alert("Please login first");
             } else if (err.message.includes("Network")) {
@@ -274,9 +354,11 @@
             } else {
               alert(`Request failed: ${err.message}`);
             }
+
             return false;
           } finally {
             button.disabled = false;
+
             if (!button.textContent.includes("Done")) {
               button.textContent = originalText;
             }

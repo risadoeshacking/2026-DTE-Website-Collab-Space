@@ -7,6 +7,8 @@
 
 {% extends "layout.html" %} {% block title %} Feed {% endblock %} {% block head
 %}
+
+<!-- page-specific styles for feed layout -->
 <style>
   .feed {
     padding: 40px 40px 20px;
@@ -15,15 +17,21 @@
     gap: 30px 40px;
     margin: 0 auto;
   }
+
+  /* spacing adjustment for main content area */
   .main {
     margin-left: 70px !important;
     padding-top: 60px !important;
     padding-left: 20px !important;
     padding-right: 20px !important;
   }
+
+  /* logo positioning */
   .logo {
     top: 10px !important;
   }
+
+  /* post card styling */
   .card {
     background: #222;
     border: 1px solid #444;
@@ -32,9 +40,13 @@
     margin-bottom: 20px;
     cursor: pointer;
   }
+
+  /* hover effect for cards */
   .card:hover {
     background: #333;
   }
+
+  /* post image styling */
   .card img {
     width: 100%;
     height: 150px;
@@ -45,20 +57,30 @@
     filter: brightness(1.2) !important;
     mix-blend-mode: normal !important;
   }
+
+  /* post title */
   .title {
     color: white;
     font-size: 18px;
     margin-bottom: 5px;
   }
+
+  /* author text styling */
   .author {
     color: #aaa;
     font-size: 14px;
     margin-bottom: 12px;
   }
 </style>
+
 {% endblock %} {% block body %}
+
+<!-- main feed container -->
 <div class="feed">
+  <!-- loop through posts from backend -->
   {% for p in posts %}
+
+  <!-- single post card -->
   <div
     class="card post-clickable"
     data-post-id="{{ p.id }}"
@@ -68,17 +90,25 @@
     data-post-author="{{ p.full_name }}"
     data-post-type="General"
   >
+    <!-- post image (only if exists) -->
     {% if p.image_path %}
     <img src="/static/{{ p.image_path }}" />
     {% endif %}
+
+    <!-- post title -->
     <div class="title">{{ p.title }}</div>
+
+    <!-- author profile link -->
     <a
       href="/user/{{ p.user_id }}"
       class="author"
       onclick="event.stopPropagation();"
       style="text-decoration: none; color: #aaa"
-      >{{ p.full_name }}</a
     >
+      {{ p.full_name }}
+    </a>
+
+    <!-- hidden collab request form -->
     <form
       class="collab-hide"
       action="/request_collab/{{ p.id }}"
@@ -88,18 +118,27 @@
       <button type="submit" class="collab-btn">Request Collab</button>
     </form>
   </div>
+
   {% endfor %}
 </div>
 
+<!-- ========================= JAVASCRIPT ========================= -->
 <script>
+  // wait for page to fully load
   document.addEventListener("DOMContentLoaded", function () {
+    // attach click events to collab buttons
     document.querySelectorAll(".collab-btn").forEach((btn) => {
       btn.addEventListener("click", async function (e) {
         e.preventDefault();
+
+        // get parent form
         const form = this.closest("form");
+
+        // call global collab request handler
         await window.handleCollabRequest(form.action, this);
       });
     });
   });
 </script>
+
 {% endblock %}

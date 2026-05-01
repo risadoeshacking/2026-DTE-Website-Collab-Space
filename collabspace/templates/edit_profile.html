@@ -1,31 +1,44 @@
-{% extends "layout.html" %} {% block title %}Edit Profile{% endblock %} {% block
-head %}
+{% extends "layout.html" %}
+
+<!-- page title shown in browser tab -->
+{% block title %}Edit Profile{% endblock %} {% block head %}
 <style>
+  /* wrapper to center the edit profile box */
   .edit-wrap {
     max-width: 500px;
     margin: 0 auto;
     padding: 20px;
   }
+
+  /* main card container for the form */
   .edit-card {
     background: #222;
     border: 1px solid #444;
     border-radius: 12px;
     padding: 30px;
   }
+
+  /* title inside edit card */
   .edit-card h2 {
     color: #fff;
     margin-bottom: 20px;
     text-align: center;
   }
+
+  /* spacing for each form section */
   .form-group {
     margin-bottom: 20px;
   }
+
+  /* label styling for inputs */
   .form-group label {
     display: block;
     color: #ccc;
     margin-bottom: 8px;
     font-size: 14px;
   }
+
+  /* input and textarea styling */
   .form-group input,
   .form-group textarea {
     width: 100%;
@@ -36,15 +49,21 @@ head %}
     color: #fff;
     font-size: 14px;
   }
+
+  /* focus effect when user clicks input */
   .form-group input:focus,
   .form-group textarea:focus {
     outline: none;
     border-color: #0095dd;
   }
+
+  /* textarea specific settings */
   .form-group textarea {
     resize: vertical;
     min-height: 100px;
   }
+
+  /* save button styling */
   .save-btn {
     background: #0095dd;
     color: white;
@@ -56,9 +75,13 @@ head %}
     width: 100%;
     margin-bottom: 10px;
   }
+
+  /* hover effect for save button */
   .save-btn:hover {
     background: #007bb8;
   }
+
+  /* cancel button styling (acts like a link) */
   .cancel-btn {
     background: #444;
     color: white;
@@ -72,13 +95,17 @@ head %}
     display: inline-block;
     text-align: center;
   }
+
+  /* hover effect for cancel button */
   .cancel-btn:hover {
     background: #555;
   }
+
+  /* profile image preview styling */
   .current-pic {
     width: 100px;
     height: 100px;
-    border-radius: 50%;
+    border-radius: 50%; /* makes it circle */
     object-fit: cover;
     border: 3px solid #0095dd;
     display: block;
@@ -86,11 +113,16 @@ head %}
   }
 </style>
 {% endblock %} {% block body %}
+
+<!-- main container for edit profile page -->
 <div class="edit-wrap">
   <div class="edit-card">
+    <!-- page heading -->
     <h2>Edit Profile</h2>
 
+    <!-- form sends updated profile data -->
     <form method="POST" action="/profile/edit">
+      <!-- full name input -->
       <div class="form-group">
         <label for="full_name">Full Name</label>
         <input
@@ -102,6 +134,7 @@ head %}
         />
       </div>
 
+      <!-- bio input -->
       <div class="form-group">
         <label for="bio">Bio</label>
         <textarea id="bio" name="bio" placeholder="Tell us about yourself...">
@@ -109,6 +142,7 @@ head %}
         >
       </div>
 
+      <!-- skills input -->
       <div class="form-group">
         <label for="skills">Skills</label>
         <input
@@ -118,14 +152,19 @@ head %}
           value="{{ skills_str or '' }}"
           placeholder="e.g. Python, Design, Writing"
         />
-        <small style="color: #888; display: block; margin-top: 6px"
-          >Separate skills with commas</small
-        >
+        <!-- helper text -->
+        <small style="color: #888; display: block; margin-top: 6px">
+          Separate skills with commas
+        </small>
       </div>
 
+      <!-- submit button -->
       <button type="submit" class="save-btn">Save Changes</button>
+
+      <!-- cancel and go back -->
       <a href="/profile" class="cancel-btn">Cancel</a>
     </form>
   </div>
 </div>
+
 {% endblock %}

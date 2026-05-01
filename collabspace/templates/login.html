@@ -8,13 +8,20 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <!-- character encoding for proper text display -->
     <meta charset="UTF-8" />
+
+    <!-- page title shown in browser tab -->
     <title>Login | Collab Space</title>
+
+    <!-- linking external CSS file -->
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='styles.css') }}"
     />
+
     <style>
+      /* error message styling for login failures */
       .flash-error {
         background: #ff4444;
         color: white;
@@ -27,29 +34,45 @@
   </head>
 
   <body>
+    <!-- main split layout container (left + right side) -->
     <div class="split-container">
+      <!-- left side branding section -->
       <div class="left-side">
         <h1>Collab Space</h1>
         <p>Work together. Build together.</p>
       </div>
 
+      <!-- right side login form section -->
       <div class="right-side">
+        <!-- glass style login card -->
         <div class="glass-card">
+          <!-- logo image -->
           <img
             src="{{ url_for('static', filename='logo.png') }}"
             class="logo"
           />
 
+          <!-- login heading -->
           <h2>Login</h2>
+
+          <!-- small subtitle -->
           <p class="sub">Enter your details</p>
 
+          <!-- display flash messages from backend (errors, alerts, etc.) -->
           {% with messages = get_flashed_messages(with_categories=true) %} {% if
           messages %} {% for category, message in messages %}
+
+          <!-- error message box -->
           <div class="flash-error">{{ message }}</div>
+
           {% endfor %} {% endif %} {% endwith %}
 
+          <!-- login form -->
           <form method="POST" action="{{ url_for('login') }}">
+            <!-- email input field -->
             <input type="email" name="email" placeholder="Email" required />
+
+            <!-- password input field -->
             <input
               type="password"
               name="password"
@@ -57,9 +80,11 @@
               required
             />
 
+            <!-- submit login button -->
             <button type="submit">Sign In</button>
           </form>
 
+          <!-- link to register page -->
           <p class="link-text">
             No account?
             <a href="{{ url_for('register') }}">Create one</a>
@@ -67,7 +92,9 @@
         </div>
       </div>
     </div>
+
     <script>
+      // automatically fade out error messages after 4 seconds
       setTimeout(() => {
         document.querySelectorAll(".flash-error").forEach((el) => {
           el.style.transition = "opacity 1s";

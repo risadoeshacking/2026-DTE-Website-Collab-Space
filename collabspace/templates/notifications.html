@@ -1,6 +1,11 @@
-{% extends "layout.html" %} {% block title %}Notifications - Collab Space{%
-endblock %} {% block body %}
+{% extends "layout.html" %}
+
+<!-- page title for notifications page -->
+{% block title %}Notifications - Collab Space{% endblock %} {% block body %}
+
+<!-- main container for notifications page -->
 <div style="max-width: 600px; margin: 0 auto; padding: 20px">
+  <!-- header section (title + mark all read button) -->
   <div
     style="
       display: flex;
@@ -9,7 +14,10 @@ endblock %} {% block body %}
       margin-bottom: 20px;
     "
   >
+    <!-- page heading -->
     <h1 style="color: white; margin: 0">Notifications</h1>
+
+    <!-- button to mark all notifications as read -->
     <button
       onclick="markAllRead()"
       style="
@@ -25,19 +33,34 @@ endblock %} {% block body %}
     </button>
   </div>
 
+  <!-- ===================== PENDING COLLAB REQUESTS ===================== -->
   {% if pending_requests %}
+
+  <!-- section title for pending requests -->
   <h2 style="color: #00ff00; margin: 20px 0 15px 0">
     Pending Requests ({{ pending_requests|length }})
   </h2>
+
+  <!-- loop through all pending requests -->
   {% for req in pending_requests %}
+
+  <!-- each request card -->
   <div class="request-card" data-req-id="{{ req.id }}">
     <div>
+      <!-- user sending request -->
       <strong style="color: #00ff00">{{ req.from_name }}</strong> wants to
       collab on
+
+      <!-- link to post -->
       <a href="/home" style="color: #6366f1">{{ req.post_title }}</a>
+
       <br />
+
+      <!-- timestamp -->
       <small style="opacity: 0.7">{{ req.created_at[:16] }}</small>
     </div>
+
+    <!-- action buttons (approve / decline) -->
     <div style="display: flex; gap: 10px">
       <button
         onclick="handleRequest('{{ req.id }}', 'approve')"
@@ -45,6 +68,7 @@ endblock %} {% block body %}
       >
         Approve
       </button>
+
       <button
         onclick="handleRequest('{{ req.id }}', 'decline')"
         class="btn-decline"
@@ -53,16 +77,32 @@ endblock %} {% block body %}
       </button>
     </div>
   </div>
-  {% endfor %} {% endif %} {% if unread %}
+  {% endfor %} {% endif %}
+
+  <!-- ===================== UNREAD NOTIFICATIONS ===================== -->
+  {% if unread %}
+
+  <!-- unread section title -->
   <h2 style="color: #6366f1; margin: 30px 0 15px 0">
     Unread ({{ unread|length }})
   </h2>
+
+  <!-- loop unread notifications -->
   {% for notif in unread %}
+
+  <!-- unread notification card -->
   <div class="notification-card unread" id="notif-{{ notif.id }}">
     <div>
+      <!-- notification message -->
       {{ notif.message }}
-      <br /><small style="opacity: 0.7">{{ notif.created_at[:16] }}</small>
+
+      <br />
+
+      <!-- timestamp -->
+      <small style="opacity: 0.7">{{ notif.created_at[:16] }}</small>
     </div>
+
+    <!-- mark single notification as read -->
     <button
       onclick="markRead({{ notif.id }})"
       style="
@@ -78,17 +118,35 @@ endblock %} {% block body %}
       Mark read
     </button>
   </div>
-  {% endfor %} {% endif %} {% if read_notifs %}
+  {% endfor %} {% endif %}
+
+  <!-- ===================== READ NOTIFICATIONS ===================== -->
+  {% if read_notifs %}
+
+  <!-- read notifications section -->
   <h2 style="color: #888; margin: 30px 0 15px 0">
     Read ({{ read_notifs|length }})
   </h2>
+
+  <!-- loop read notifications -->
   {% for notif in read_notifs %}
+
+  <!-- read notification card -->
   <div class="notification-card read">
+    <!-- message -->
     {{ notif.message }}
-    <br /><small style="opacity: 0.7">{{ notif.created_at[:16] }}</small>
+
+    <br />
+
+    <!-- timestamp -->
+    <small style="opacity: 0.7">{{ notif.created_at[:16] }}</small>
   </div>
-  {% endfor %} {% endif %} {% if not pending_requests and not unread and not
-  read_notifs %}
+  {% endfor %} {% endif %}
+
+  <!-- ===================== EMPTY STATE ===================== -->
+  {% if not pending_requests and not unread and not read_notifs %}
+
+  <!-- shown when no notifications exist -->
   <div style="text-align: center; padding: 50px; color: #888">
     <h2>No notifications yet</h2>
     <p>Collab requests and updates will appear here!</p>
@@ -96,7 +154,9 @@ endblock %} {% block body %}
   {% endif %}
 </div>
 
+<!-- ===================== STYLING ===================== -->
 <style>
+  /* base card style for both requests and notifications */
   .request-card,
   .notification-card {
     backdrop-filter: blur(10px);
@@ -110,16 +170,24 @@ endblock %} {% block body %}
     align-items: center;
     gap: 10px;
   }
+
+  /* green highlight for collab requests */
   .request-card {
     border-left: 4px solid #00ff00;
   }
+
+  /* unread notification styling */
   .notification-card.unread {
     border-left: 4px solid #6366f1;
   }
+
+  /* read notifications look faded */
   .notification-card.read {
     opacity: 0.6;
     border-left: 4px solid #444;
   }
+
+  /* approve button */
   .btn-approve {
     background: #00ff00;
     color: black;
@@ -129,6 +197,8 @@ endblock %} {% block body %}
     cursor: pointer;
     font-weight: bold;
   }
+
+  /* decline button */
   .btn-decline {
     background: #ff4444;
     color: white;
@@ -140,7 +210,9 @@ endblock %} {% block body %}
   }
 </style>
 
+<!-- ===================== JAVASCRIPT LOGIC ===================== -->
 <script>
+  // handles approve/decline collab request
   function handleRequest(reqId, action) {
     const url = "/" + action + "_request/" + reqId;
 
@@ -155,11 +227,15 @@ endblock %} {% block body %}
       })
       .then(function (data) {
         if (data.success) {
+          // remove request card smoothly
           const card = document.querySelector('[data-req-id="' + reqId + '"]');
           card.style.transition = "opacity 0.3s";
           card.style.opacity = "0";
+
           setTimeout(function () {
             card.remove();
+
+            // reload page if no more requests
             if (!document.querySelector(".request-card")) {
               window.location.reload();
             }
@@ -173,6 +249,8 @@ endblock %} {% block body %}
         alert("Failed: " + err.message);
       });
   }
+
+  // marks single notification as read
   function markRead(notifId) {
     fetch("/mark_read/" + notifId, { method: "POST" })
       .then(function (response) {
@@ -181,14 +259,17 @@ endblock %} {% block body %}
       .then(function (data) {
         if (data.success) {
           const card = document.getElementById("notif-" + notifId);
+
           if (card) {
             card.classList.remove("unread");
             card.classList.add("read");
 
+            // remove mark button after reading
             const btn = card.querySelector("button");
             if (btn) btn.remove();
           }
 
+          // update badge if exists
           if (window.updateNotifBadge) {
             window.updateNotifBadge();
           }
@@ -202,6 +283,7 @@ endblock %} {% block body %}
       });
   }
 
+  // marks all notifications as read
   function markAllRead() {
     fetch("/mark_all_read", { method: "POST" })
       .then(function (response) {
@@ -220,4 +302,5 @@ endblock %} {% block body %}
       });
   }
 </script>
+
 {% endblock %}

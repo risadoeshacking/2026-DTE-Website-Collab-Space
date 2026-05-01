@@ -1,11 +1,16 @@
-{% extends "layout.html" %} {% block title %}My Profile{% endblock %} {% block
-head %}
+{% extends "layout.html" %}
+
+<!-- page title for browser tab -->
+{% block title %}My Profile{% endblock %} {% block head %}
 <style>
+  /* main wrapper for profile page layout */
   .profile-wrap {
     max-width: 700px;
     margin: 0 auto;
     padding: 20px;
   }
+
+  /* main profile information card */
   .profile-card {
     background: #222;
     border: 1px solid #666;
@@ -15,6 +20,8 @@ head %}
     margin-bottom: 30px;
     box-shadow: 0 4px 12px rgba(255, 255, 255, 0.05);
   }
+
+  /* profile image styling */
   .profile-pic {
     width: 140px;
     height: 140px;
@@ -23,6 +30,8 @@ head %}
     border: 3px solid #0095dd;
     margin-bottom: 15px;
   }
+
+  /* default avatar when no profile image exists */
   .default-avatar {
     width: 140px;
     height: 140px;
@@ -36,16 +45,22 @@ head %}
     margin: 0 auto 15px;
     border: 3px solid #0095dd;
   }
+
+  /* user's full name display */
   .profile-name {
     font-size: 28px;
     color: #fff;
     margin-bottom: 5px;
   }
+
+  /* username display under name */
   .profile-username {
     font-size: 16px;
     color: #aaa;
     margin-bottom: 15px;
   }
+
+  /* bio section styling */
   .profile-bio {
     font-size: 15px;
     color: #ccc;
@@ -53,6 +68,8 @@ head %}
     margin-bottom: 20px;
     white-space: pre-wrap;
   }
+
+  /* edit profile button */
   .edit-btn {
     background: #0095dd;
     color: white;
@@ -64,9 +81,13 @@ head %}
     text-decoration: none;
     display: inline-block;
   }
+
+  /* hover effect for edit button */
   .edit-btn:hover {
     background: #007bb8;
   }
+
+  /* container for skills section */
   .skills-wrap {
     margin: 15px 0 20px;
     display: flex;
@@ -74,6 +95,8 @@ head %}
     gap: 8px;
     justify-content: center;
   }
+
+  /* individual skill tags */
   .skill-tag {
     background: #0095dd;
     color: white;
@@ -82,11 +105,15 @@ head %}
     font-size: 13px;
     font-weight: bold;
   }
+
+  /* section title (like My Posts) */
   .section-title {
     font-size: 20px;
     color: #fff;
     margin-bottom: 15px;
   }
+
+  /* post card styling */
   .post-card {
     background: #222;
     border: 1px solid #666;
@@ -95,6 +122,8 @@ head %}
     margin-bottom: 15px;
     box-shadow: 0 4px 12px rgba(255, 255, 255, 0.05);
   }
+
+  /* post image styling */
   .post-card img {
     width: 100%;
     height: 160px;
@@ -102,77 +131,115 @@ head %}
     border-radius: 8px;
     margin-bottom: 10px;
   }
+
+  /* post title styling */
   .post-title {
     color: white;
     font-size: 18px;
     margin-bottom: 5px;
   }
+
+  /* post description styling */
   .post-desc {
     color: #aaa;
     font-size: 14px;
   }
+
+  /* message when user has no posts */
   .no-posts {
     color: #777;
     text-align: center;
     padding: 30px;
   }
 
-  /* Simple mobile responsiveness */
+  /* ================= MOBILE RESPONSIVE DESIGN ================= */
   @media (max-width: 600px) {
+    /* reduce padding on small screens */
     .profile-wrap {
       padding: 10px;
     }
+
+    /* smaller profile card padding */
     .profile-card {
       padding: 20px;
     }
+
+    /* smaller profile image */
     .profile-pic,
     .default-avatar {
       width: 100px;
       height: 100px;
     }
+
+    /* smaller avatar text */
     .default-avatar {
       font-size: 36px;
     }
+
+    /* smaller name text */
     .profile-name {
       font-size: 22px;
     }
+
+    /* smaller username text */
     .profile-username {
       font-size: 14px;
     }
+
+    /* smaller bio text */
     .profile-bio {
       font-size: 13px;
     }
+
+    /* smaller post card spacing */
     .post-card {
       padding: 15px;
     }
+
+    /* smaller post title */
     .post-title {
       font-size: 16px;
     }
+
+    /* smaller post description */
     .post-desc {
       font-size: 13px;
     }
+
+    /* smaller section heading */
     .section-title {
       font-size: 18px;
     }
   }
 </style>
 {% endblock %} {% block body %}
+
+<!-- main profile page container -->
 <div class="profile-wrap">
-  <!-- Profile Info Card -->
+  <!-- ================= PROFILE INFO SECTION ================= -->
   <div class="profile-card">
+    <!-- default avatar using first letter of name -->
     <div class="default-avatar">
       {{ user.full_name[0] if user.full_name else '?' }}
     </div>
 
+    <!-- full name display -->
     <div class="profile-name">{{ user.full_name or 'No Name' }}</div>
+
+    <!-- username display -->
     <div class="profile-username">@{{ user.username or 'username' }}</div>
 
+    <!-- user bio section -->
     {% if user.bio %}
     <div class="profile-bio">{{ user.bio }}</div>
     {% else %}
     <div class="profile-bio">No bio yet.</div>
-    {% endif %} {% if skills %}
+    {% endif %}
+
+    <!-- skills section -->
+    {% if skills %}
     <div class="skills-wrap">
+      <!-- loop through skills -->
       {% for skill in skills %}
       <span class="skill-tag">{{ skill }}</span>
       {% endfor %}
@@ -181,26 +248,47 @@ head %}
     <div class="skills-wrap" style="color: #777; font-size: 14px">
       No skills added yet.
     </div>
-    {% endif %} {% if is_me %}
+    {% endif %}
+
+    <!-- edit profile button (only shown for owner) -->
+    {% if is_me %}
     <a href="/profile/edit" class="edit-btn">Edit Profile</a>
     {% endif %}
   </div>
 
-  <!-- User's Posts -->
+  <!-- ================= USER POSTS SECTION ================= -->
+
+  <!-- section title changes depending on user -->
   <h2 class="section-title">
     {% if is_me %}My Posts{% else %}{{ user.full_name }}'s Posts{% endif %}
   </h2>
 
-  {% if posts %} {% for post in posts %}
+  <!-- check if user has posts -->
+  {% if posts %}
+
+  <!-- loop through posts -->
+  {% for post in posts %}
+
+  <!-- individual post card -->
   <div class="post-card">
+    <!-- show post image if available -->
     {% if post.image_path %}
     <img src="/static/{{ post.image_path }}" alt="Post image" />
     {% endif %}
+
+    <!-- post title -->
     <div class="post-title">{{ post.title }}</div>
+
+    <!-- post description -->
     <div class="post-desc">{{ post.description }}</div>
   </div>
+
   {% endfor %} {% else %}
+
+  <!-- message when no posts exist -->
   <div class="no-posts">You haven't posted anything yet.</div>
+
   {% endif %}
 </div>
+
 {% endblock %}

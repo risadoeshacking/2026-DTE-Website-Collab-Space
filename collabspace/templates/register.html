@@ -8,15 +8,21 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <!-- character encoding for proper text display -->
     <meta charset="UTF-8" />
+
+    <!-- page title shown in browser tab -->
     <title>Create Account | Collab Space</title>
-    <!-- Styles Sheet -->
+
+    <!-- linking external stylesheet -->
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='styles.css') }}"
     />
-    <!-- Adding Styles to the code -->
+
+    <!-- internal styles for flash messages -->
     <style>
+      /* base style for all flash messages */
       .flash-msg {
         padding: 15px;
         margin: 20px;
@@ -24,10 +30,14 @@
         text-align: center;
         font-weight: bold;
       }
+
+      /* error message styling */
       .flash-error {
         background: #ff4444;
         color: white;
       }
+
+      /* success message styling */
       .flash-success {
         background: #44dd44;
         color: white;
@@ -35,37 +45,53 @@
     </style>
   </head>
 
-<!-- Body -->
-
+  <!-- ========================= BODY SECTION ========================= -->
   <body>
+    <!-- main split layout container (left + right) -->
     <div class="split-container">
+      <!-- left side login/register card area -->
       <div class="left-side">
+        <!-- glass style card container -->
         <div class="glass-card">
+          <!-- logo image -->
           <img
             src="{{ url_for('static', filename='logo.png') }}"
             class="logo"
           />
 
+          <!-- page heading -->
           <h2>Create Account</h2>
+
+          <!-- subtitle text -->
           <p class="sub">Start your journey</p>
 
+          <!-- ================= FLASH MESSAGES FROM BACKEND ================= -->
           {% with messages = get_flashed_messages(with_categories=True) %} {% if
           messages %} {% for category, message in messages %}
+
+          <!-- display success or error messages dynamically -->
           <div
             class="flash-msg flash-{{ 'success' if category == 'success' else 'error' }}"
           >
             {{ message }}
           </div>
+
           {% endfor %} {% endif %} {% endwith %}
 
+          <!-- ================= REGISTER FORM ================= -->
           <form method="POST" action="{{ url_for('register') }}">
+            <!-- full name input -->
             <input
               type="text"
               name="fullname"
               placeholder="Full Name"
               required
             />
+
+            <!-- email input -->
             <input type="email" name="email" placeholder="Email" required />
+
+            <!-- password input -->
             <input
               type="password"
               name="password"
@@ -73,9 +99,11 @@
               required
             />
 
+            <!-- submit button -->
             <button type="submit">Create</button>
           </form>
 
+          <!-- link to login page -->
           <p class="link-text">
             Already have one?
             <a href="{{ url_for('login') }}">Login</a>
@@ -83,8 +111,12 @@
         </div>
       </div>
 
+      <!-- right side branding section -->
       <div class="right-side big-text">
+        <!-- main heading -->
         <h1>Join Collab Space</h1>
+
+        <!-- tagline -->
         <p>Create. Share. Collaborate.</p>
       </div>
     </div>
